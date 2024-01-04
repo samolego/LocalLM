@@ -1,3 +1,5 @@
+import com.android.tools.build.bundletool.model.ManifestMutator
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -6,6 +8,7 @@ plugins {
 android {
     namespace = "org.samo_lego.locallm"
     compileSdk = 34
+    ManifestMutator.withExtractNativeLibs(true)
 
     defaultConfig {
         applicationId = "org.samo_lego.locallm"
@@ -18,13 +21,11 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-
         externalNativeBuild {
             cmake {
-                arguments("-DANDROID_STL=c++_shared")
+                cppFlags += ""
             }
         }
-
     }
 
     buildTypes {
@@ -54,13 +55,19 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    externalNativeBuild {
+        cmake {
+            path = file("libs/java-llama.cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
+    }
 }
 
 dependencies {
 
-    implementation("androidx.core:core-ktx:1.10.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
-    implementation("androidx.activity:activity-compose:1.7.0")
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+    implementation("androidx.activity:activity-compose:1.8.2")
     implementation(platform("androidx.compose:compose-bom:2023.08.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
@@ -74,5 +81,5 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
-    implementation("de.kherud:llama:2.3.1")
+    //implementation("de.kherud:llama:2.3.1")
 }
