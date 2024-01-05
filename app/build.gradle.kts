@@ -1,5 +1,3 @@
-import com.android.tools.build.bundletool.model.ManifestMutator
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -9,14 +7,12 @@ plugins {
 android {
     namespace = "org.samo_lego.locallm"
     compileSdk = 34
-    ManifestMutator.withExtractNativeLibs(true)
 
     // Execute "mvn compile" if folder target/ doesn't exist at ./libs/java-llama.cpp/
-    var path = file("libs/java-llama.cpp/")
-    if (!file("$path/target/").exists()) {
+    if (!file("libs/java-llama.cpp/target").exists()) {
         exec {
             commandLine = listOf("mvn", "compile")
-            workingDir = path
+            workingDir = file("libs/java-llama.cpp/")
         }
     }
 
