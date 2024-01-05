@@ -5,10 +5,20 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+
 android {
     namespace = "org.samo_lego.locallm"
     compileSdk = 34
     ManifestMutator.withExtractNativeLibs(true)
+
+    // Execute "mvn compile" if folder target/ doesn't exist at ./libs/java-llama.cpp/
+    var path = file("libs/java-llama.cpp/")
+    if (!file("$path/target/").exists()) {
+        exec {
+            commandLine = listOf("mvn", "compile")
+            workingDir = path
+        }
+    }
 
     defaultConfig {
         applicationId = "org.samo_lego.locallm"
@@ -81,5 +91,5 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
-    //implementation("de.kherud:llama:2.3.1")
+    //implementation("de.kherud:llama:2.3.2")
 }
