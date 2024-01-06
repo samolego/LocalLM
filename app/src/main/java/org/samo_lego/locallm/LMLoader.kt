@@ -1,15 +1,15 @@
 package org.samo_lego.locallm
 
-import android.content.pm.ApplicationInfo
+import android.content.Context
 import android.util.Log
 import de.kherud.llama.InferenceParameters
 import de.kherud.llama.LlamaModel
 import de.kherud.llama.LogLevel
 import de.kherud.llama.ModelParameters
-import kotlin.io.path.Path
+import java.io.File
 
 class LMLoader {
-    fun testText(applicationInfo: ApplicationInfo): String {
+    fun testText(context: Context): String {
         LlamaModel.setLogger { level: LogLevel?, message: String? ->
             Log.d(
                 "Llama",
@@ -26,8 +26,8 @@ class LMLoader {
             .setMirostat(InferenceParameters.MiroStat.V2)
             .setAntiPrompt("\n")
 
-        val modelPath =
-            Path(applicationInfo.nativeLibraryDir).parent.parent.toString() + "/phi2q5.gguf"
+
+        val file = File(context.filesDir, "/dolphin-2_6-phi-2.Q4_K_M.gguf")
         val system = """
             This is a conversation between User and Llama, a friendly chatbot.
             Llama is helpful, kind, honest, good at writing, and never fails to answer any requests immediately and with precision.
@@ -35,7 +35,7 @@ class LMLoader {
             """.trimIndent()
 
         var out = "Llama:"
-        LlamaModel(modelPath, modelParams).use { model ->
+        LlamaModel(file.path, modelParams).use { model ->
             Log.d("Llama", system)
             var prompt: String? = system
             prompt += "\nUser: "

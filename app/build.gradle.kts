@@ -61,11 +61,39 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    val jllamaLib = file("libs/java-llama.cpp")
     externalNativeBuild {
         cmake {
-            path = file("libs/java-llama.cpp/CMakeLists.txt")
+            path = file("${jllamaLib}/CMakeLists.txt")
             version = "3.22.1"
         }
+    }
+
+    sourceSets {
+        named("main") {
+            // Add source directory for java-llama.cpp
+            java.srcDir("${jllamaLib}/src/main/java")
+        }
+    }
+
+    // Apply patch files on build
+    val applyPatches by tasks.registering(JavaExec::class) {
+        doFirst {
+            val patchDir = file("patch/")
+            if (patchDir.exists()) {
+                patchDir.listFiles()?.forEach { patchFile ->
+                    if (patchFile.extension == "patch") {
+                        executable = "patch"
+                        args("-p0", "<", patchFile.absolutePath)
+                    }
+                }
+            }
+        }
+    }
+
+    tasks.build {
+        dependsOn(applyPatches)
     }
 }
 

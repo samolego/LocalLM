@@ -1,0 +1,54 @@
+Subject: [PATCH] Make jllama load on Android
+---
+Index: src/main/java/de/kherud/llama/LlamaLoader.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/de/kherud/llama/LlamaLoader.java b/src/main/java/de/kherud/llama/LlamaLoader.java
+--- a/src/main/java/de/kherud/llama/LlamaLoader.java	(revision 24e56b365f694587cbd85a838162908ca94f2b83)
++++ b/src/main/java/de/kherud/llama/LlamaLoader.java	(date 1704551145560)
+@@ -94,6 +94,18 @@
+ 	private static void loadNativeLibrary(String name) {
+ 		List<String> triedPaths = new LinkedList<>();
+ 
++		// START Add support for loading from packed apk file
++		if (OSInfo.isAndroid()) {
++			try {
++				// loadLibrary can load directly from packed apk file automatically, if c++ sources are added
++				System.loadLibrary(name);
++				return;
++			} catch (UnsatisfiedLinkError e) {
++				e.printStackTrace();
++			}
++		}
++		// END Add support for loading from packed apk file
++
+ 		// Try loading library from de.kherud.llama.lib.path library path
+ 		String nativeLibName = System.getProperty("de.kherud.llama.lib.name");
+ 		if (nativeLibName == null) {
+Index: src/main/cpp/jllama.cpp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/cpp/jllama.cpp b/src/main/cpp/jllama.cpp
+--- a/src/main/cpp/jllama.cpp	(revision 24e56b365f694587cbd85a838162908ca94f2b83)
++++ b/src/main/cpp/jllama.cpp	(date 1704551197900)
+@@ -298,11 +298,13 @@
+ 
+     goto success;
+ 
+-error:
++    error:
+     return JNI_ERR;
+ 
+-success:
+-    return JNI_VERSION_1_1;
++    success:
++    // START Return supported Android JNI version
++    return JNI_VERSION_1_2;
++    // END Return supported Android JNI version
+ }
+ 
+ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved)

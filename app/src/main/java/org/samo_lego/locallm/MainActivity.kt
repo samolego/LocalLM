@@ -21,11 +21,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val libsDir =
-            Path(applicationInfo.nativeLibraryDir).parent.parent.toString() + "base.apk!/lib/arm64-v8a/"
-        System.setProperty("de.kherud.llama.lib.path", libsDir)
-
-        //System.loadLibrary("llama")
-        //System.loadLibrary("jllama")
+            Path(applicationInfo.nativeLibraryDir).parent.parent.toString()
 
         Log.d(TAG, "onCreate: appDataDir = $libsDir")
 
@@ -37,7 +33,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting(LMLoader().testText(applicationInfo) + "Android")
+                    Greeting(LMLoader().testText(applicationContext) + "Android")
                 }
             }
         }
