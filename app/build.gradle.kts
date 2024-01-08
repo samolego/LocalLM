@@ -8,8 +8,10 @@ android {
     namespace = "org.samo_lego.locallm"
     compileSdk = 34
 
+    val jllamaLib = file("libs/java-llama.cpp")
+
     // Execute "mvn compile" if folder target/ doesn't exist at ./libs/java-llama.cpp/
-    if (!file("libs/java-llama.cpp/target").exists()) {
+    if (!file("$jllamaLib/target").exists()) {
         exec {
             commandLine = listOf("mvn", "compile")
             workingDir = file("libs/java-llama.cpp/")
@@ -30,6 +32,7 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags += ""
+                //arguments += "-DANDROID_STL=c++_shared"
             }
         }
     }
@@ -62,10 +65,9 @@ android {
         }
     }
 
-    val jllamaLib = file("libs/java-llama.cpp")
     externalNativeBuild {
         cmake {
-            path = file("${jllamaLib}/CMakeLists.txt")
+            path = file("$jllamaLib/CMakeLists.txt")
             version = "3.22.1"
         }
     }
@@ -73,19 +75,24 @@ android {
     sourceSets {
         named("main") {
             // Add source directory for java-llama.cpp
-            java.srcDir("${jllamaLib}/src/main/java")
+            java.srcDir("$jllamaLib/src/main/java")
         }
     }
 
     // Apply patch files on build
-    val applyPatches by tasks.registering(JavaExec::class) {
+    /*task("applyPatches") {
         doFirst {
             val patchDir = file("patch/")
             if (patchDir.exists()) {
                 patchDir.listFiles()?.forEach { patchFile ->
                     if (patchFile.extension == "patch") {
-                        executable = "patch"
-                        args("-p0", "<", patchFile.absolutePath)
+                        println("Applying patch ${patchFile.name}...")
+                        println("Executing: patch --directory=$jllamaLib -p1 < ${patchFile.absolutePath}")
+                        val processBuilder =
+                            ProcessBuilder("patch", "--directory=$jllamaLib", "-p1")
+                        processBuilder.redirectInput(patchFile.absoluteFile)
+                        val process = processBuilder.start()
+                        process.waitFor()
                     }
                 }
             }
@@ -93,8 +100,8 @@ android {
     }
 
     tasks.build {
-        dependsOn(applyPatches)
-    }
+        dependsOn("applyPatches")
+    }*/
 }
 
 dependencies {

@@ -1,22 +1,3 @@
-Index: src/main/cpp/jllama.cpp
-IDEA additional info:
-Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
-<+>UTF-8
-===================================================================
-diff --git a/src/main/cpp/jllama.cpp b/src/main/cpp/jllama.cpp
---- a/src/main/cpp/jllama.cpp	(revision 24e56b365f694587cbd85a838162908ca94f2b83)
-+++ b/src/main/cpp/jllama.cpp	(date 1704554304460)
-@@ -302,7 +302,9 @@
-     return JNI_ERR;
-
- success:
--    return JNI_VERSION_1_1;
-+    // START Return supported Android JNI version
-+    return JNI_VERSION_1_2;
-+    // END Return supported Android JNI version
- }
-
- JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved)
 Index: src/main/java/de/kherud/llama/LlamaLoader.java
 IDEA additional info:
 Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
@@ -24,11 +5,12 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
 ===================================================================
 diff --git a/src/main/java/de/kherud/llama/LlamaLoader.java b/src/main/java/de/kherud/llama/LlamaLoader.java
 --- a/src/main/java/de/kherud/llama/LlamaLoader.java	(revision 24e56b365f694587cbd85a838162908ca94f2b83)
-+++ b/src/main/java/de/kherud/llama/LlamaLoader.java	(date 1704570656493)
-@@ -94,6 +94,18 @@
- 	private static void loadNativeLibrary(String name) {
- 		List<String> triedPaths = new LinkedList<>();
++++ b/src/main/java/de/kherud/llama/LlamaLoader.java	(date 1704654246527)
+@@ -110,6 +110,19 @@
+ 			}
+ 		}
 
++
 +		// START Add support for loading from packed apk file
 +		if (OSInfo.isAndroid()) {
 +			try {
@@ -41,6 +23,64 @@ diff --git a/src/main/java/de/kherud/llama/LlamaLoader.java b/src/main/java/de/k
 +		}
 +		// END Add support for loading from packed apk file
 +
- 		// Try loading library from de.kherud.llama.lib.path library path
- 		String nativeLibName = System.getProperty("de.kherud.llama.lib.name");
- 		if (nativeLibName == null) {
+ 		// Load the os-dependent library from the jar file
+ 		nativeLibPath = getNativeResourcePath();
+ 		if (hasNativeLib(nativeLibPath, nativeLibName)) {
+Index: src/main/cpp/jllama.cpp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/cpp/jllama.cpp b/src/main/cpp/jllama.cpp
+--- a/src/main/cpp/jllama.cpp	(revision 24e56b365f694587cbd85a838162908ca94f2b83)
++++ b/src/main/cpp/jllama.cpp	(date 1704577363334)
+@@ -280,10 +280,11 @@
+ //    o_utf_8 = env->GetStaticObjectField(c_standard_charsets, f_utf_8);
+     o_utf_8 = env->NewStringUTF("UTF-8");
+     o_utf_8 = (jclass)env->NewGlobalRef(o_utf_8);
+-    o_log_level_debug = env->GetStaticObjectField(c_log_level, f_log_level_debug);
+-    o_log_level_info = env->GetStaticObjectField(c_log_level, f_log_level_info);
+-    o_log_level_warn = env->GetStaticObjectField(c_log_level, f_log_level_warn);
+-    o_log_level_error = env->GetStaticObjectField(c_log_level, f_log_level_error);
++    o_log_level_debug = (jobject)env->NewGlobalRef(env->GetStaticObjectField(c_log_level, f_log_level_debug));
++    o_log_level_info = (jobject)env->NewGlobalRef(env->GetStaticObjectField(c_log_level, f_log_level_info));
++    o_log_level_warn = (jobject)env->NewGlobalRef(env->GetStaticObjectField(c_log_level, f_log_level_warn));
++    o_log_level_error = (jobject)env->NewGlobalRef(env->GetStaticObjectField(c_log_level, f_log_level_error));
++
+
+     if (!(o_utf_8 && o_log_level_debug && o_log_level_info && o_log_level_warn && o_log_level_error))
+     {
+@@ -302,7 +303,9 @@
+     return JNI_ERR;
+
+ success:
+-    return JNI_VERSION_1_1;
++    // START Return supported Android JNI version
++    return JNI_VERSION_1_2;
++    // END Return supported Android JNI version
+ }
+
+ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved)
+@@ -330,7 +333,13 @@
+     env->DeleteGlobalRef(c_llama_error);
+     env->DeleteGlobalRef(c_error_oom);
+
++    // START Android - Delete global references
+     env->DeleteGlobalRef(o_utf_8);
++    env->DeleteGlobalRef(o_log_level_debug);
++    env->DeleteGlobalRef(o_log_level_info);
++    env->DeleteGlobalRef(o_log_level_warn);
++    env->DeleteGlobalRef(o_log_level_error);
++    // END Delete global references
+ }
+
+ static void jllama_log_callback(enum ggml_log_level level, const char *text, void *user_data)
+@@ -361,7 +370,7 @@
+
+     env->CallVoidMethod(g_log_callback, m_biconsumer_accept, java_log_level, java_text);
+
+-    env->DeleteLocalRef(java_log_level);
++    //env->DeleteLocalRef(java_log_level);
+     env->DeleteLocalRef(java_text);
+ }
+
