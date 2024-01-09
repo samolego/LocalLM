@@ -14,19 +14,18 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.withContext
-import org.samo_lego.locallm.lmloader.LMLoader
+import org.samo_lego.locallm.lmloader.LMHolder
 
-lateinit var loadedModel: LMLoader
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainApp(context: Context) {
     // Set up model in the background
-    val modelPath = "${context.filesDir}/dolphi2q4.gguf"
+    val modelPath = "${context.filesDir}/tinyllama-2-1b-miniguanaco.Q4_K_M.gguf"
 
     LaunchedEffect(Unit) {
         withContext(coroutineContext) {
-            loadedModel = LMLoader(modelPath)
+            LMHolder.setModel(modelPath)
         }
     }
 

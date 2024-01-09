@@ -18,15 +18,14 @@ class LMLoader(modelPath: String, modelParams: ModelParameters = ModelParameters
 
     fun suggest(
         text: String,
-        inferParams: InferenceParameters = InferenceParameters()
-    ): List<String> {
+        onSuggestion: (String) -> Unit = {},
+        inferParams: InferenceParameters = InferenceParameters(),
+    ) {
         isGenerating = true
-        val suggestions = mutableListOf<String>()
         for (suggestion in model.generate(text, inferParams)) {
-            suggestions.add(suggestion.toString())
+            onSuggestion(suggestion.toString())
         }
         isGenerating = false
-        return suggestions
     }
 
     override fun equals(other: Any?): Boolean {
