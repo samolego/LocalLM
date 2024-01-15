@@ -69,3 +69,22 @@ fun UserMessageBubblePreview() {
 fun BotMessageBubblePreview() {
     MessageBubble(message = "Bot here", isUser = false)
 }
+
+@Preview
+@Composable
+fun TwoMessagesPreview() {
+    Column {
+        MessageBubble(
+            message = "Hello, I'm user. Lorem ipsum long text which goes on and on to test overflow ...",
+            isUser = true
+        )
+        MessageBubble(
+            message = "Bot here. Lorem ipsum testing overflow. How far can this text go? Will it break?",
+            isUser = false
+        )
+        MessageBubble(
+            message = "Bot here. Lorem ipsum testing overflow. How far can this text go? Will it break?",
+            isUser = false
+        )
+    }
+}

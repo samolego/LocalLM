@@ -59,14 +59,20 @@ fun Conversation() {
                         messages.add(UserMessage(text))
 
 
-                        val botTokens = mutableStateListOf<String>()
-                        val botResponse = BotMessage(botTokens)
+                        var botTokens = mutableStateListOf<String>()
+                        var botResponse = BotMessage(botTokens)
                         messages.add(botResponse)
 
                         // Run model to generate response
                         LMHolder.suggest(text, onSuggestion = { suggestion ->
                             Log.v("LocalLM", "Suggestion: $suggestion")
-                            botTokens.add(suggestion)
+                            if (suggestion == "\n" && botTokens.isNotEmpty()) {
+                                botTokens = mutableStateListOf()
+                                botResponse = BotMessage(botTokens)
+                                messages.add(botResponse)
+                            } else if (suggestion != "\n") {
+                                botTokens.add(suggestion)
+                            }
                         })
                     }
                 },

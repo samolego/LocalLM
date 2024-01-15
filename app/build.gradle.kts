@@ -32,6 +32,9 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags += ""
+                arguments += "-DCMAKE_VERBOSE_MAKEFILE=ON"
+                //arguments += "-DLLAMA_CLBLAST=1"  // Enable CLBlast
+                //arguments += "--trace-expand"
                 //arguments += "-DANDROID_STL=c++_shared"
             }
         }

@@ -50,7 +50,7 @@ class LMLoader(modelPath: String, modelParams: ModelParameters = ModelParameters
 
     companion object {
         init {
-            val tag = "LocalLM-native"
+            val tag = "LocalLM-jllama"
             LlamaModel.setLogger { level: LogLevel?, message: String? ->
                 if (message != null) {
                     when (level) {
