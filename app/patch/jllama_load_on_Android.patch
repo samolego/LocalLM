@@ -65,8 +65,8 @@ diff --git a/src/main/cpp/jllama.cpp b/src/main/cpp/jllama.cpp
      env->DeleteGlobalRef(c_llama_error);
      env->DeleteGlobalRef(c_error_oom);
 
-+    // START Android - Delete global references
      env->DeleteGlobalRef(o_utf_8);
++    // START Android - Delete global references
 +    env->DeleteGlobalRef(o_log_level_debug);
 +    env->DeleteGlobalRef(o_log_level_info);
 +    env->DeleteGlobalRef(o_log_level_warn);
