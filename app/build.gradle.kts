@@ -18,6 +18,16 @@ android {
         }
     }
 
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "x86", "x86_64")
+            isUniversalApk = false
+        }
+    }
+
+
     defaultConfig {
         applicationId = "org.samo_lego.locallm"
         minSdk = 26
@@ -25,15 +35,27 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
+
+
+        //val libs = file("libs/").absolutePath
+
         externalNativeBuild {
             cmake {
                 cppFlags += ""
-                arguments += "-DCMAKE_VERBOSE_MAKEFILE=ON"
-                //arguments += "-DLLAMA_CLBLAST=1"  // Enable CLBlast
+                //arguments += "-DCMAKE_VERBOSE_MAKEFILE=ON"
+                //arguments += "-DLLAMA_CLBLAST=ON"  // Enable CLBlast
+                //arguments += "-DCLBlast_DIR=$libs/clblast"  // Enable CLBlast
+                //arguments += "-DLLAMA_BLAS=ON"  // Enable BLAS
+                //arguments += "-DLLAMA_BLAS_VENDOR=\"OpenBLAS\""  // Use OpenBLAS
+                //arguments += "-DBLAS_INCLUDE_DIRS=$libs/openblas"
+                //arguments += "-DBLAS_LIBRARIES=$libs/openblas"
+                //arguments += "-DCMAKE_C_FLAGS=-fopenmp"
+                //arguments += "--debug-find"
                 //arguments += "--trace-expand"
                 //arguments += "-DANDROID_STL=c++_shared"
             }
@@ -42,11 +64,18 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isDebuggable = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
+        }
+        debug {
+            isDebuggable = true
+            isMinifyEnabled = false
+            isJniDebuggable = true
         }
     }
     compileOptions {
