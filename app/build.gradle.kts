@@ -8,7 +8,8 @@ android {
     namespace = "org.samo_lego.locallm"
     compileSdk = 34
 
-    val jllamaLib = file("libs/java-llama.cpp")
+    val libs = file("libs/").absolutePath
+    val jllamaLib = file("$libs/java-llama.cpp")
 
     // Execute "mvn compile" if folder target/ doesn't exist at ./libs/java-llama.cpp/
     if (!file("$jllamaLib/target").exists()) {
@@ -42,7 +43,6 @@ android {
         }
 
 
-        //val libs = file("libs/").absolutePath
 
         externalNativeBuild {
             cmake {
@@ -110,30 +110,6 @@ android {
             java.srcDir("$jllamaLib/src/main/java")
         }
     }
-
-    // Apply patch files on build
-    /*task("applyPatches") {
-        doFirst {
-            val patchDir = file("patch/")
-            if (patchDir.exists()) {
-                patchDir.listFiles()?.forEach { patchFile ->
-                    if (patchFile.extension == "patch") {
-                        println("Applying patch ${patchFile.name}...")
-                        println("Executing: patch --directory=$jllamaLib -p1 < ${patchFile.absolutePath}")
-                        val processBuilder =
-                            ProcessBuilder("patch", "--directory=$jllamaLib", "-p1")
-                        processBuilder.redirectInput(patchFile.absoluteFile)
-                        val process = processBuilder.start()
-                        process.waitFor()
-                    }
-                }
-            }
-        }
-    }
-
-    tasks.build {
-        dependsOn("applyPatches")
-    }*/
 }
 
 dependencies {

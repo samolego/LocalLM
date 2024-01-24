@@ -6,11 +6,10 @@ import de.kherud.llama.LlamaModel
 import de.kherud.llama.LogLevel
 import de.kherud.llama.ModelParameters
 
-class LMLoader(modelPath: String, modelParams: ModelParameters = ModelParameters()) :
+class LoadedModel(modelPath: String, modelParams: ModelParameters = ModelParameters()) :
     AutoCloseable {
     private val model: LlamaModel
     private val path: String = modelPath
-    private var isGenerating = false
 
     init {
         model = LlamaModel(modelPath, modelParams)
@@ -21,15 +20,13 @@ class LMLoader(modelPath: String, modelParams: ModelParameters = ModelParameters
         onSuggestion: (String) -> Unit = {},
         inferParams: InferenceParameters = InferenceParameters(),
     ) {
-        isGenerating = true
         for (suggestion in model.generate(text, inferParams)) {
             onSuggestion(suggestion.toString())
         }
-        isGenerating = false
     }
 
     override fun equals(other: Any?): Boolean {
-        if (other is LMLoader) {
+        if (other is LoadedModel) {
             return this.path == other.path
         }
         return false

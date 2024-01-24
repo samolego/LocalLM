@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class LMHolder {
     companion object {
-        private lateinit var loadedModel: LMLoader
+        private lateinit var loadedModel: LoadedModel
 
         private val suggestQueue = mutableListOf<Suggestion>()
         private var switchingModel: AtomicBoolean = AtomicBoolean(false)
@@ -40,7 +40,7 @@ class LMHolder {
             switchingModel = AtomicBoolean(true)
 
             CoroutineScope(Dispatchers.Default).launch {
-                loadedModel = LMLoader(model)
+                loadedModel = LoadedModel(model)
                 switchingModel = AtomicBoolean(false)
                 onModelLoaded()
             }
