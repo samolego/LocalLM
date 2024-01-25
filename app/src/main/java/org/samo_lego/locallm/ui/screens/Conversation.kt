@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -18,12 +19,14 @@ import org.samo_lego.locallm.ui.components.BotMessage
 import org.samo_lego.locallm.ui.components.Input
 import org.samo_lego.locallm.ui.components.TextResponse
 import org.samo_lego.locallm.ui.components.UserMessage
+import org.samo_lego.locallm.voice.tts
 
 private val messages: MutableList<TextResponse> = mutableStateListOf()
 
 @Preview(showBackground = true)
 @Composable
 fun Conversation() {
+    val ttScope = rememberCoroutineScope()
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -57,13 +60,15 @@ fun Conversation() {
                     // Run model to generate response
                     LMHolder.suggest(text, onSuggestion = { suggestion ->
                         Log.v("LocalLM", "Suggestion: $suggestion")
-                        if (suggestion == "\n" && botTokens.isNotEmpty()) {
+                        if (suggestion.last() == '\n' && botTokens.isNotEmpty()) {
                             botTokens = mutableStateListOf()
                             botResponse = BotMessage(botTokens)
                             messages.add(botResponse)
                         } else if (suggestion != "\n") {
                             botTokens.add(suggestion)
                         }
+
+                        tts.addWord(ttScope, suggestion)
                     })
                 }
             },

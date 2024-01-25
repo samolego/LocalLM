@@ -47,6 +47,7 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags += ""
+                arguments += "-DCMAKE_BUILD_TYPE=Release"
                 //arguments += "-DCMAKE_VERBOSE_MAKEFILE=ON"
                 //arguments += "-DLLAMA_CLBLAST=ON"  // Enable CLBlast
                 //arguments += "-DCLBlast_DIR=$libs/clblast"  // Enable CLBlast
