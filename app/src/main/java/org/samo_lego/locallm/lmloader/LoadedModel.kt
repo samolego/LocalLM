@@ -5,14 +5,18 @@ import de.kherud.llama.InferenceParameters
 import de.kherud.llama.LlamaModel
 import de.kherud.llama.LogLevel
 import de.kherud.llama.ModelParameters
+import org.samo_lego.locallm.config.LMPreferences
 
-class LoadedModel(modelPath: String, modelParams: ModelParameters = ModelParameters()) :
+class LoadedModel(
+    val path: String,
+    modelParams: ModelParameters = ModelParameters(),
+    val preferences: LMPreferences = LMPreferences()
+) :
     AutoCloseable {
     private val model: LlamaModel
-    private val path: String = modelPath
 
     init {
-        model = LlamaModel(modelPath, modelParams)
+        model = LlamaModel(path, modelParams)
     }
 
     fun suggest(

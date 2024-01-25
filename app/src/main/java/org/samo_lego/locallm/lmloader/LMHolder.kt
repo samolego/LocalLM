@@ -33,6 +33,11 @@ class LMHolder {
             }
         }
 
+
+        fun currentModel(): LoadedModel {
+            return loadedModel
+        }
+
         fun setModel(model: String) {
             if (::loadedModel.isInitialized) {
                 loadedModel.close()

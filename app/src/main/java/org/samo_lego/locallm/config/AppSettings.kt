@@ -7,36 +7,36 @@ val appSettings: AppSettings
     get() = settings
 
 class AppSettings(private val sharedPreferences: SharedPreferences) {
-    fun setString(key: String, value: String) {
-        sharedPreferences.edit().putString(key, value).apply()
+    fun setString(key: SettingsKeys, value: String) {
+        sharedPreferences.edit().putString(key.toString(), value).apply()
     }
 
-    fun getString(key: String, default: String): String {
-        return sharedPreferences.getString(key, default) ?: default
+    fun getString(key: SettingsKeys, default: String): String {
+        return sharedPreferences.getString(key.toString(), default) ?: default
     }
 
-    fun setInt(key: String, value: Int) {
-        sharedPreferences.edit().putInt(key, value).apply()
+    fun setInt(key: SettingsKeys, value: Int) {
+        sharedPreferences.edit().putInt(key.toString(), value).apply()
     }
 
-    fun getInt(key: String, default: Int): Int {
-        return sharedPreferences.getInt(key, default)
+    fun getInt(key: SettingsKeys, default: Int): Int {
+        return sharedPreferences.getInt(key.toString(), default)
     }
 
-    fun setBool(key: String, value: Boolean) {
-        sharedPreferences.edit().putBoolean(key, value).apply()
+    fun setBool(key: SettingsKeys, value: Boolean) {
+        sharedPreferences.edit().putBoolean(key.toString(), value).apply()
     }
 
-    fun getBool(key: String, default: Boolean): Boolean {
-        return sharedPreferences.getBoolean(key, default)
+    fun getBool(key: SettingsKeys, default: Boolean): Boolean {
+        return sharedPreferences.getBoolean(key.toString(), default)
     }
 
-    fun setFloat(key: String, value: Float) {
-        sharedPreferences.edit().putFloat(key, value).apply()
+    fun setFloat(key: SettingsKeys, value: Float) {
+        sharedPreferences.edit().putFloat(key.toString(), value).apply()
     }
 
-    fun getFloat(key: String, default: Float): Float {
-        return sharedPreferences.getFloat(key, default)
+    fun getFloat(key: SettingsKeys, default: Float): Float {
+        return sharedPreferences.getFloat(key.toString(), default)
     }
 
 
@@ -47,4 +47,9 @@ class AppSettings(private val sharedPreferences: SharedPreferences) {
 
         private const val settingsLabel = "Settings"
     }
+}
+
+enum class SettingsKeys(key: String) {
+    USE_CHATML("useChatML"),
+    USE_TTS("useTTS"),
 }

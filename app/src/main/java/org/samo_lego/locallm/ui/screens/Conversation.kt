@@ -19,6 +19,7 @@ import org.samo_lego.locallm.ui.components.BotMessage
 import org.samo_lego.locallm.ui.components.Input
 import org.samo_lego.locallm.ui.components.TextResponse
 import org.samo_lego.locallm.ui.components.UserMessage
+import org.samo_lego.locallm.util.processUserText
 import org.samo_lego.locallm.voice.tts
 
 private val messages: MutableList<TextResponse> = mutableStateListOf()
@@ -58,7 +59,8 @@ fun Conversation() {
                     messages.add(botResponse)
 
                     // Run model to generate response
-                    LMHolder.suggest(text, onSuggestion = { suggestion ->
+                    tts.reset()
+                    LMHolder.suggest(processUserText(text), onSuggestion = { suggestion ->
                         Log.v("LocalLM", "Suggestion: $suggestion")
                         if (suggestion.last() == '\n' && botTokens.isNotEmpty()) {
                             botTokens = mutableStateListOf()
@@ -68,7 +70,9 @@ fun Conversation() {
                             botTokens.add(suggestion)
                         }
 
-                        tts.addWord(ttScope, suggestion)
+                        if (LMHolder.currentModel().preferences.useTTS) {
+                            tts.addWord(ttScope, suggestion)
+                        }
                     })
                 }
             },

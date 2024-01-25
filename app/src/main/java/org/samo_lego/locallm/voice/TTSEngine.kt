@@ -99,6 +99,12 @@ class TTSEngine(context: Context) {
         speak(text, TextToSpeech.QUEUE_FLUSH, null, text.hashCode().toString())
     }
 
+    fun reset() {
+        // Clear current sentence
+        currentSentence.clear()
+        tts.stop()
+    }
+
 
     var speed: Float = 1.0f
         set(value) {
