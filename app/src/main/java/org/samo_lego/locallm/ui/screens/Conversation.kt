@@ -14,12 +14,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import org.samo_lego.locallm.config.SettingsKeys
+import org.samo_lego.locallm.config.appSettings
 import org.samo_lego.locallm.lmloader.LMHolder
 import org.samo_lego.locallm.ui.components.BotMessage
 import org.samo_lego.locallm.ui.components.Input
 import org.samo_lego.locallm.ui.components.TextResponse
 import org.samo_lego.locallm.ui.components.UserMessage
-import org.samo_lego.locallm.util.processUserText
 import org.samo_lego.locallm.voice.tts
 
 private val messages: MutableList<TextResponse> = mutableStateListOf()
@@ -60,7 +61,7 @@ fun Conversation() {
 
                     // Run model to generate response
                     tts.reset()
-                    LMHolder.suggest(processUserText(text), onSuggestion = { suggestion ->
+                    LMHolder.suggest(text, onSuggestion = { suggestion ->
                         Log.v("LocalLM", "Suggestion: $suggestion")
                         if (suggestion.last() == '\n' && botTokens.isNotEmpty()) {
                             botTokens = mutableStateListOf()
@@ -70,7 +71,7 @@ fun Conversation() {
                             botTokens.add(suggestion)
                         }
 
-                        if (LMHolder.currentModel().preferences.useTTS) {
+                        if (appSettings.getBool(SettingsKeys.USE_TTS, true)) {
                             tts.addWord(ttScope, suggestion)
                         }
                     })

@@ -1,11 +1,11 @@
 package org.samo_lego.locallm.util
 
-import org.samo_lego.locallm.lmloader.LMHolder
+import org.samo_lego.locallm.config.LMProperties
 
-fun processUserText(text: String): String {
+fun processUserText(text: String, properties: LMProperties): String {
     // Apply ChatML to text if needed
-    if (LMHolder.currentModel().preferences.useChatML) {
-        return toChatML(LMHolder.currentModel().preferences.systemPrompt, text)
+    if (properties.useChatML) {
+        return toChatML(properties.systemPrompt, text)
     }
 
     return text

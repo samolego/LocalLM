@@ -50,21 +50,30 @@ class TTSEngine(context: Context) {
     }
 
     fun addWord(scope: CoroutineScope, word: String) {
-        currentSentence.append(word)
+        currentSentence.append(word.replace(mdRegex, ""))
         Log.d("TTSEngine", "Added word: $word. Current sentence: $currentSentence")
 
         // Check if we have a full sentence
-        if (word.endsWith('.') || word.endsWith('?') || word.endsWith('!') || word.endsWith(':') || word.endsWith(
-                ','
-            ) || word.endsWith('\n')
-        ) {
+        val andDel = " and "
+        val hasMultSentences = currentSentence.contains(andDel)
+        if (canSpeak(word)) {
             // Remove markdown for TTS
-            val toSpeak = currentSentence.replace(mdRegex, "")
-            currentSentence.clear()
+            val toSpeak = currentSentence.toString()
+
+            if (hasMultSentences) {
+                currentSentence.delete(0, currentSentence.indexOf(andDel) + andDel.length)
+            } else {
+                currentSentence.clear()
+            }
+
             scope.launch {
                 sentenceFlow.emit(toSpeak)
             }
         }
+    }
+
+    private fun canSpeak(word: String): Boolean {
+        return word.last() in sentenceEnd
     }
 
     private suspend fun TextToSpeech.awaitSpeak(
@@ -119,6 +128,7 @@ class TTSEngine(context: Context) {
 
     companion object {
         private val mdRegex = Regex("([#*_~])")
+        private val sentenceEnd = setOf('.', '?', '!', ':', ',', '\n')
         fun init(context: Context) {
             if (!::ttsEngine.isInitialized) {
                 ttsEngine = TTSEngine(context)

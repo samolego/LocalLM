@@ -50,6 +50,5 @@ class AppSettings(private val sharedPreferences: SharedPreferences) {
 }
 
 enum class SettingsKeys(key: String) {
-    USE_CHATML("useChatML"),
     USE_TTS("useTTS"),
 }

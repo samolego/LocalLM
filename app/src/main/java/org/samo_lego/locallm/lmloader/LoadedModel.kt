@@ -5,12 +5,14 @@ import de.kherud.llama.InferenceParameters
 import de.kherud.llama.LlamaModel
 import de.kherud.llama.LogLevel
 import de.kherud.llama.ModelParameters
-import org.samo_lego.locallm.config.LMPreferences
+import org.samo_lego.locallm.config.LMProperties
+import org.samo_lego.locallm.util.processUserText
+import java.io.File
 
 class LoadedModel(
     val path: String,
     modelParams: ModelParameters = ModelParameters(),
-    val preferences: LMPreferences = LMPreferences()
+    var properties: LMProperties = LMProperties(File(path).name, path),
 ) :
     AutoCloseable {
     private val model: LlamaModel
@@ -24,7 +26,10 @@ class LoadedModel(
         onSuggestion: (String) -> Unit = {},
         inferParams: InferenceParameters = InferenceParameters(),
     ) {
-        for (suggestion in model.generate(text, inferParams)) {
+        // Pre-process user text
+        val procText = processUserText(text, properties)
+
+        for (suggestion in model.generate(procText, inferParams)) {
             onSuggestion(suggestion.toString())
         }
     }

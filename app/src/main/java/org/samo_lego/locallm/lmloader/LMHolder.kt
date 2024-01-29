@@ -3,15 +3,15 @@ package org.samo_lego.locallm.lmloader
 import de.kherud.llama.InferenceParameters
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import java.util.concurrent.atomic.AtomicBoolean
 
 class LMHolder {
     companion object {
         private lateinit var loadedModel: LoadedModel
 
         private val suggestQueue = mutableListOf<Suggestion>()
-        private var switchingModel: AtomicBoolean = AtomicBoolean(false)
+        private var modelLoading: Job? = null
 
         fun suggest(
             question: String,
@@ -34,7 +34,12 @@ class LMHolder {
         }
 
 
-        fun currentModel(): LoadedModel {
+        suspend fun currentModel(): LoadedModel {
+            if (modelLoading != null) {
+                modelLoading!!.join()
+                modelLoading = null
+            }
+
             return loadedModel
         }
 
@@ -42,11 +47,9 @@ class LMHolder {
             if (::loadedModel.isInitialized) {
                 loadedModel.close()
             }
-            switchingModel = AtomicBoolean(true)
 
-            CoroutineScope(Dispatchers.Default).launch {
+            modelLoading = CoroutineScope(Dispatchers.Default).launch {
                 loadedModel = LoadedModel(model)
-                switchingModel = AtomicBoolean(false)
                 onModelLoaded()
             }
         }
