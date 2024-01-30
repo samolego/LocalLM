@@ -9,8 +9,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -29,6 +33,7 @@ private val messages: MutableList<TextResponse> = mutableStateListOf()
 @Composable
 fun Conversation() {
     val ttScope = rememberCoroutineScope()
+    var botTokens by remember { mutableStateOf(StringBuilder()) }
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -54,8 +59,6 @@ fun Conversation() {
                     // Add new text response to view
                     messages.add(UserMessage(text))
 
-
-                    var botTokens = mutableStateListOf<String>()
                     var botResponse = BotMessage(botTokens)
                     messages.add(botResponse)
 
@@ -63,16 +66,28 @@ fun Conversation() {
                     tts.reset()
                     LMHolder.suggest(text, onSuggestion = { suggestion ->
                         Log.v("LocalLM", "Suggestion: $suggestion")
-                        if (suggestion.last() == '\n' && botTokens.isNotEmpty()) {
-                            botTokens = mutableStateListOf()
-                            botResponse = BotMessage(botTokens)
-                            messages.add(botResponse)
-                        } else if (suggestion != "\n") {
-                            botTokens.add(suggestion)
-                        }
+                        if (suggestion.isEmpty()) {
+                            // Check for ChatML end of sentence
+                            if (botTokens.contains("<|im_end|>")) {
+                                botTokens.removeRange(
+                                    botTokens.indexOf("<|im_end|>"),
+                                    botTokens.length - 1
+                                )
+                            }
+                            // Finish the sentence
+                            tts.finishSentence(ttScope)
+                        } else {
+                            if (suggestion.last() == '\n' && botTokens.isNotEmpty()) {
+                                botTokens = StringBuilder()
+                                botResponse = BotMessage(botTokens)
+                                messages.add(botResponse)
+                            } else if (suggestion != "\n") {
+                                botTokens.append(suggestion)
+                            }
 
-                        if (appSettings.getBool(SettingsKeys.USE_TTS, true)) {
-                            tts.addWord(ttScope, suggestion)
+                            if (appSettings.getBool(SettingsKeys.USE_TTS, true)) {
+                                tts.addWord(ttScope, suggestion)
+                            }
                         }
                     })
                 }

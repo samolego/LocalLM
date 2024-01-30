@@ -1,5 +1,6 @@
 package org.samo_lego.locallm.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,10 +21,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.withContext
 import org.samo_lego.locallm.config.LMProperties
 import org.samo_lego.locallm.lmloader.LMHolder
 
@@ -44,21 +45,10 @@ fun Settings() {
                 .fillMaxWidth()
                 .padding(paddingValues),
         ) {
-            var modelProperties by remember {
-                mutableStateOf(
-                    LMProperties(
-                        "LLM",
-                        "/path/to/model.gguf",
-                        "You are a well-trained llama.",
-                        true,
-                    )
-                )
-            }
+            var modelProperties by remember { mutableStateOf<LMProperties?>(null) }
 
             LaunchedEffect(Unit) {
-                withContext(coroutineContext) {
-                    modelProperties = LMHolder.currentModel().properties
-                }
+                modelProperties = LMHolder.currentModel().properties
             }
 
             ModelCard(modelProperties = modelProperties)
@@ -67,10 +57,16 @@ fun Settings() {
 }
 
 @Composable
-fun ModelCard(modelProperties: LMProperties) {
-    var modelName by remember { mutableStateOf(modelProperties.name) }
-    var systemPrompt by remember { mutableStateOf(modelProperties.systemPrompt) }
-    var useChatML by remember { mutableStateOf(modelProperties.useChatML) }
+fun ModelCard(modelProperties: LMProperties?) {
+    var modelName by remember { mutableStateOf(modelProperties?.name.orEmpty()) }
+    var systemPrompt by remember { mutableStateOf(modelProperties?.systemPrompt.orEmpty()) }
+    var useChatML by remember { mutableStateOf(modelProperties?.useChatML ?: false) }
+
+    LaunchedEffect(modelProperties) {
+        modelName = modelProperties?.name.orEmpty()
+        systemPrompt = modelProperties?.systemPrompt.orEmpty()
+        useChatML = modelProperties?.useChatML ?: false
+    }
 
     Box(
         modifier = Modifier.fillMaxWidth(),
@@ -91,7 +87,7 @@ fun ModelCard(modelProperties: LMProperties) {
                 value = modelName,
                 onValueChange = { value ->
                     modelName = value
-                    modelProperties.name = value
+                    modelProperties?.name = value
                 },
             )
 
@@ -104,15 +100,25 @@ fun ModelCard(modelProperties: LMProperties) {
                 value = systemPrompt,
                 onValueChange = { value ->
                     systemPrompt = value
-                    modelProperties.systemPrompt = value
+                    modelProperties?.systemPrompt = value
                 },
             )
 
-            Text(text = "Model Path")
             TextField(
                 modifier = Modifier
-                    .fillMaxWidth(),
-                value = modelProperties.modelPath,
+                    .fillMaxWidth()
+                    .onFocusEvent {
+                        // Launch file picker
+                        Log.d("LocalLM", "File picker not implemented yet")
+
+                        // De-focus
+
+                    },
+                value = modelProperties?.modelPath.orEmpty(),
+                label = {
+                    Text(text = "Model path")
+                },
+                enabled = modelProperties?.modelPath == "",
                 readOnly = true,
                 onValueChange = { },
             )
@@ -135,7 +141,7 @@ fun ModelCard(modelProperties: LMProperties) {
                     checked = useChatML,
                     onCheckedChange = { value ->
                         useChatML = value
-                        modelProperties.useChatML = value
+                        modelProperties?.useChatML = value
                     },
                 )
             }
