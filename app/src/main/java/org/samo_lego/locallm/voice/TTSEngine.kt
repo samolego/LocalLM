@@ -108,6 +108,10 @@ class TTSEngine(context: Context) {
     }
 
     fun finishSentence(ttScope: CoroutineScope) {
+        if (currentSentence.isEmpty()) {
+            return
+        }
+
         // Speak current sentence
         val toSpeak = currentSentence.toString()
         currentSentence.clear()

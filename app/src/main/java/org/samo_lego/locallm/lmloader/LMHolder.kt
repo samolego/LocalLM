@@ -15,21 +15,27 @@ class LMHolder {
 
         fun suggest(
             question: String,
-            onSuggestion: (String) -> Unit = {},
+            onSuggestion: (String) -> Boolean = { true },
+            onEnd: () -> Unit = {},
             inferParams: InferenceParameters = InferenceParameters(),
         ) {
             if (::loadedModel.isInitialized) {
                 CoroutineScope(Dispatchers.Default).launch {
-                    loadedModel.suggest(question, onSuggestion, inferParams)
+                    loadedModel.suggest(question, onSuggestion, onEnd, inferParams)
                 }
             } else {
-                suggestQueue.add(Suggestion(question, onSuggestion, inferParams))
+                suggestQueue.add(Suggestion(question, onSuggestion, onEnd, inferParams))
             }
         }
 
         private fun onModelLoaded() {
             for (question in suggestQueue) {
-                suggest(question.question, question.onSuggestion, question.inferParams)
+                suggest(
+                    question.question,
+                    question.onSuggestion,
+                    question.onEnd,
+                    question.inferParams
+                )
             }
         }
 
@@ -58,6 +64,7 @@ class LMHolder {
 
 private data class Suggestion(
     val question: String,
-    val onSuggestion: (String) -> Unit = {},
+    val onSuggestion: (String) -> Boolean = { true },
+    val onEnd: () -> Unit = {},
     val inferParams: InferenceParameters = InferenceParameters(),
 )

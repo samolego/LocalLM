@@ -1,4 +1,4 @@
-package org.samo_lego.locallm.ui.components
+package org.samo_lego.locallm.ui.components.message
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -22,6 +22,10 @@ class BotMessage : TextResponse {
 
     val tokens = mutableStateOf("")
 
+    fun removeRange(start: Int, end: Int) {
+        tokens.value = tokens.value.removeRange(start, end)
+    }
+
     fun appendToken(token: String) {
         tokens.value += token
     }
@@ -31,4 +35,5 @@ class BotMessage : TextResponse {
         val message by remember { tokens }
         MessageBubble(message = message, isUser = false)
     }
+
 }

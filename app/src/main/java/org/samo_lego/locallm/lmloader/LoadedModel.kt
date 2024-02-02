@@ -23,15 +23,20 @@ class LoadedModel(
 
     fun suggest(
         text: String,
-        onSuggestion: (String) -> Unit = {},
+        onSuggestion: (String) -> Boolean = { true },
+        onEnd: () -> Unit = {},
         inferParams: InferenceParameters = InferenceParameters(),
     ) {
         // Pre-process user text
         val procText = processUserText(text, properties)
 
         for (suggestion in model.generate(procText, inferParams)) {
-            onSuggestion(suggestion.toString())
+            if (!onSuggestion(suggestion.toString())) {
+                break
+            }
         }
+
+        onEnd()
     }
 
     override fun equals(other: Any?): Boolean {
