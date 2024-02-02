@@ -9,12 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,6 +21,7 @@ import org.samo_lego.locallm.ui.components.BotMessage
 import org.samo_lego.locallm.ui.components.Input
 import org.samo_lego.locallm.ui.components.TextResponse
 import org.samo_lego.locallm.ui.components.UserMessage
+import org.samo_lego.locallm.util.ChatMLUtil.Companion.im_end
 import org.samo_lego.locallm.voice.tts
 
 private val messages: MutableList<TextResponse> = mutableStateListOf()
@@ -33,7 +30,7 @@ private val messages: MutableList<TextResponse> = mutableStateListOf()
 @Composable
 fun Conversation() {
     val ttScope = rememberCoroutineScope()
-    var botTokens by remember { mutableStateOf(StringBuilder()) }
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -59,7 +56,8 @@ fun Conversation() {
                     // Add new text response to view
                     messages.add(UserMessage(text))
 
-                    var botResponse = BotMessage(botTokens)
+                    var botResponse = BotMessage()
+                    var botTokens = botResponse.tokens.value
                     messages.add(botResponse)
 
                     // Run model to generate response
@@ -67,22 +65,26 @@ fun Conversation() {
                     LMHolder.suggest(text, onSuggestion = { suggestion ->
                         Log.v("LocalLM", "Suggestion: $suggestion")
                         if (suggestion.isEmpty()) {
+                            // Ended stream
                             // Check for ChatML end of sentence
-                            if (botTokens.contains("<|im_end|>")) {
+                            if (botTokens.contains(im_end)) {
                                 botTokens.removeRange(
-                                    botTokens.indexOf("<|im_end|>"),
+                                    botTokens.indexOf(im_end),
                                     botTokens.length - 1
                                 )
                             }
                             // Finish the sentence
                             tts.finishSentence(ttScope)
                         } else {
-                            if (suggestion.last() == '\n' && botTokens.isNotEmpty()) {
-                                botTokens = StringBuilder()
-                                botResponse = BotMessage(botTokens)
+                            if (suggestion.last() == '\n' && botTokens.endsWith('\n')) {
+                                botResponse = BotMessage()
+                                botTokens = botResponse.tokens.value
                                 messages.add(botResponse)
                             } else if (suggestion != "\n") {
-                                botTokens.append(suggestion)
+                                botResponse.appendToken(suggestion)
+
+                                // Trigger update
+                                //botResponse.tokens.value = botTokens
                             }
 
                             if (appSettings.getBool(SettingsKeys.USE_TTS, true)) {

@@ -1,11 +1,9 @@
 package org.samo_lego.locallm.ui.components
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 
 interface TextResponse {
 
@@ -20,18 +18,17 @@ class UserMessage(val message: String) : TextResponse {
     }
 }
 
-class BotMessage(private val messageTokens: StringBuilder) : TextResponse {
+class BotMessage : TextResponse {
+
+    val tokens = mutableStateOf("")
+
+    fun appendToken(token: String) {
+        tokens.value += token
+    }
 
     @Composable
     override fun Render() {
-        var displayedMessage by remember {
-            mutableStateOf(messageTokens.toString())
-        }
-
-        LaunchedEffect(messageTokens) {
-            displayedMessage = messageTokens.toString()
-        }
-
-        MessageBubble(message = displayedMessage, isUser = false)
+        val message by remember { tokens }
+        MessageBubble(message = message, isUser = false)
     }
 }
