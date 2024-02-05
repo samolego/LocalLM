@@ -1,9 +1,8 @@
 # LocalLM
 
-## Building
+Android app to run LLMs on-device using llama.cpp
 
-### Prerequisites
+## Please note
 
-```bash
-sudo apt install libclblast-dev opencl-headers
-```
+This project is under development as part of my bachelor thesis.
+Currently, some paths are hardcoded so this won't work for you.
