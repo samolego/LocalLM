@@ -51,4 +51,6 @@ class AppSettings(private val sharedPreferences: SharedPreferences) {
 
 enum class SettingsKeys(key: String) {
     USE_TTS("useTTS"),
+    CLOUD_STT("cloudSTT"),
+    AUTO_SEND("autoSendAfterRecognition"),
 }

@@ -1,11 +1,10 @@
 package org.samo_lego.locallm.ui.screens
 
 import android.util.Log
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -16,11 +15,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.samo_lego.locallm.config.SettingsKeys
@@ -54,12 +54,11 @@ fun Conversation() {
     ) {
         Box(
             modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .background(Color.Transparent)
+                .fillMaxSize()
         ) {
             LazyColumn(
                 state = scrollState,
+                contentPadding = PaddingValues(bottom = 128.dp)
             ) {
                 items(messages) { message ->
                     Column {
@@ -67,76 +66,94 @@ fun Conversation() {
                     }
                 }
             }
-        }
-        Input(
-            isGenerating = allowGenerating,
-            onTextSend = { str ->
-                val text = str.trim()
 
-                if (text.isNotEmpty()) {
-                    // Hide keyboard
-                    keyboardController?.hide()
+            Box(
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                Input(
+                    isGenerating = allowGenerating,
+                    onTextSend = { str ->
+                        val txt = str.trim()
 
-                    // Add new text response to view
-                    messages.add(UserMessage(text))
+                        if (txt.isNotEmpty()) {
+                            // Hide keyboard
+                            keyboardController?.hide()
 
-                    messages.add(botResponse)
+                            // Double each \n for markdown
+                            val text = txt.replace("\n", "\n\n")
 
-                    // Run model to generate response
-                    tts.reset()
-                    allowGenerating = true
-                    LMHolder.suggest(text, onSuggestion = { suggestion ->
-                        if (!allowGenerating) {
-                            return@suggest false
+
+                            // Add new text response to view
+                            messages.add(UserMessage(text))
+
+                            // Create new bot response
+                            botResponse = BotMessage()
+                            messages.add(botResponse)
+
+                            // Run model to generate response
+                            tts.reset()
+                            allowGenerating = true
+                            LMHolder.suggest(text, onSuggestion = { suggestion ->
+                                if (!allowGenerating) {
+                                    return@suggest false
+                                }
+                                Log.v("LocalLM", "Suggestion: $suggestion")
+                                if (suggestion.isEmpty()) {
+                                    onEndSuggestions(
+                                        botResponse.tokens.value,
+                                        botResponse,
+                                        ttScope
+                                    )
+                                    allowGenerating = false
+
+                                    return@suggest false
+                                } else {
+                                    botResponse.appendToken(suggestion)
+
+                                    if (botResponse.tokens.value.contains(ChatMLUtil.im_end)) {
+                                        onEndSuggestions(
+                                            botResponse.tokens.value,
+                                            botResponse,
+                                            ttScope
+                                        )
+                                        allowGenerating = false
+                                        return@suggest false
+                                    }
+
+                                    backticks += suggestion.count { it == '`' }
+
+                                    if (botResponse.tokens.value.endsWith("\n\n") && backticks % 2 == 0) {
+                                        // New bot message bubble
+                                        botResponse = BotMessage()
+                                        messages.add(botResponse)
+                                    }
+
+                                    if (appSettings.getBool(SettingsKeys.USE_TTS, true)) {
+                                        tts.addWord(ttScope, suggestion)
+                                    }
+
+                                    // Scroll to bottom
+                                    ttScope.launch {
+                                        scrollState.animateScrollToItem(messages.size - 1)
+                                    }
+                                }
+
+                                return@suggest true
+                            },
+                                onEnd = {
+                                    onEndSuggestions(botResponse.tokens.value, botResponse, ttScope)
+                                    allowGenerating = false
+                                })
                         }
-                        Log.v("LocalLM", "Suggestion: $suggestion")
-                        if (suggestion.isEmpty()) {
-                            onEndSuggestions(botResponse.tokens.value, botResponse, ttScope)
-                            allowGenerating = false
-
-                            return@suggest false
-                        } else {
-                            botResponse.appendToken(suggestion)
-
-                            if (botResponse.tokens.value.contains(ChatMLUtil.im_end)) {
-                                onEndSuggestions(botResponse.tokens.value, botResponse, ttScope)
-                                allowGenerating = false
-                                return@suggest false
-                            }
-
-                            backticks += suggestion.count { it == '`' }
-
-                            if (botResponse.tokens.value.endsWith("\n\n") && backticks % 2 == 0) {
-                                // New bot message bubble
-                                botResponse = BotMessage()
-                                messages.add(botResponse)
-                            }
-
-                            if (appSettings.getBool(SettingsKeys.USE_TTS, true)) {
-                                tts.addWord(ttScope, suggestion)
-                            }
-
-                            // Scroll to bottom
-                            ttScope.launch {
-                                scrollState.animateScrollToItem(messages.size - 1)
-                            }
-                        }
-
-                        return@suggest true
                     },
-                        onEnd = {
-                            onEndSuggestions(botResponse.tokens.value, botResponse, ttScope)
-                            allowGenerating = false
-                        })
-                }
-            },
-            onForceStopGeneration = {
-                allowGenerating = false
-                tts.reset()
-                botResponse.appendToken(" ... [-- Stopped --]")
-                botResponse = BotMessage()
+                    onForceStopGeneration = {
+                        allowGenerating = false
+                        tts.reset()
+                        botResponse.appendToken(" ... [-- Stopped --]")
+                    }
+                )
             }
-        )
+        }
     }
 }
 
