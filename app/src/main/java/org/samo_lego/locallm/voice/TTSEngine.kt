@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.samo_lego.locallm.util.ChatMLUtil.Companion.im_end
 import java.util.Locale
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -56,7 +57,7 @@ class TTSEngine(context: Context) {
 
         // Check if we have a full sentence
         if (canSpeak(word)) {
-            val toSpeak = currentSentence.toString()
+            val toSpeak = currentSentence.toString().replace(im_end, "")
             currentSentence.clear()
 
             scope.launch {
@@ -113,7 +114,7 @@ class TTSEngine(context: Context) {
         }
 
         // Speak current sentence
-        val toSpeak = currentSentence.toString()
+        val toSpeak = currentSentence.toString().replace(im_end, "")
         currentSentence.clear()
 
         ttScope.launch {

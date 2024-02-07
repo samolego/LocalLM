@@ -105,7 +105,7 @@ fun MicInput(speechToText: STTEngine, onComplete: (String) -> Unit = {}) {
         y = animateDpAsState(
             targetValue = if (isRecognizing) {
                 // Middle of the screen
-                -LocalConfiguration.current.screenHeightDp.dp / 3
+                -LocalConfiguration.current.screenHeightDp.dp / 2 + 196.dp
             } else {
                 // Bottom of the screen
                 0.dp

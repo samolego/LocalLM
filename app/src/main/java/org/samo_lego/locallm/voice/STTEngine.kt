@@ -14,6 +14,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import org.samo_lego.locallm.config.SettingsKeys
 import org.samo_lego.locallm.config.appSettings
+import java.util.Locale
 
 
 class STTEngine(private val context: Context) {
@@ -43,16 +44,15 @@ class STTEngine(private val context: Context) {
 
 
     init {
-
         //intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
         //intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
         intent.putExtra(
             RecognizerIntent.EXTRA_LANGUAGE,
-            "en-US"
+            Locale.getDefault()
         )
         intent.putExtra(
             RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,
-            "en-US"
+            Locale.getDefault()
         )
         stt?.setRecognitionListener(object : android.speech.RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
