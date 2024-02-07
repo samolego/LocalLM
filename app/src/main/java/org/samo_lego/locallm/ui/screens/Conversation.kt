@@ -16,7 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,7 +34,6 @@ import org.samo_lego.locallm.voice.tts
 
 private val messages: MutableList<TextResponse> = mutableStateListOf()
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Preview(showBackground = true)
 @Composable
 fun Conversation() {
@@ -58,7 +56,12 @@ fun Conversation() {
         ) {
             LazyColumn(
                 state = scrollState,
-                contentPadding = PaddingValues(bottom = 128.dp)
+                contentPadding = PaddingValues(
+                    bottom = 128.dp,
+                    top = 8.dp,
+                    start = 8.dp,
+                    end = 8.dp
+                ),
             ) {
                 items(messages) { message ->
                     Column {

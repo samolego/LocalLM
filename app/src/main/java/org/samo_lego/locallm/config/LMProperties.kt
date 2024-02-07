@@ -11,5 +11,5 @@ data class LMProperties(
     var name: String,
     val modelPath: String,
     var systemPrompt: String = defaultSystem,
-    var useChatML: Boolean = false,
+    var useChatML: Boolean = true,
 ) : Parcelable

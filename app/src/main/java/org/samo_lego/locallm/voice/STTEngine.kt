@@ -32,15 +32,28 @@ class STTEngine(private val context: Context) {
     } else {
         null
     }
+    private val intent: Intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
 
     private var speechReadyEvent: (() -> Unit) = {}
     private var speechBeginEvent: (() -> Unit) = {}
     private var speechEndEvent: (() -> Unit) = {}
     private var rmsChangedEvent: ((Float) -> Unit) = {}
     private var speechResultsEvent: ((Bundle?) -> Unit) = {}
+    private var errorEvent: ((Int) -> Unit) = {}
 
 
     init {
+
+        //intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+        //intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
+        intent.putExtra(
+            RecognizerIntent.EXTRA_LANGUAGE,
+            "en-US"
+        )
+        intent.putExtra(
+            RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,
+            "en-US"
+        )
         stt?.setRecognitionListener(object : android.speech.RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
                 Log.d("STTEngine", "onReadyForSpeech")
@@ -71,6 +84,7 @@ class STTEngine(private val context: Context) {
 
             override fun onError(error: Int) {
                 Log.d("STTEngine", "onError: $error")
+                errorEvent(error)
             }
 
             override fun onResults(results: Bundle?) {
@@ -103,6 +117,7 @@ class STTEngine(private val context: Context) {
         onBeginningOfSpeech: () -> Unit = {},
         onRmsChanged: (Float) -> Unit = {},
         onEndOfSpeech: () -> Unit = {},
+        onError: (Int) -> Unit = {},
         onResults: (Bundle?) -> Unit = {},
     ) {
         speechReadyEvent = onReadyForSpeech
@@ -110,23 +125,11 @@ class STTEngine(private val context: Context) {
         rmsChangedEvent = onRmsChanged
         speechEndEvent = onEndOfSpeech
         speechResultsEvent = onResults
+        errorEvent = onError
+
 
         // todo - make this block until permission is granted / denied
         if (checkMicrophonePermission()) {
-            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-            //intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            //intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
-
-
-            intent.putExtra(
-                RecognizerIntent.EXTRA_LANGUAGE,
-                "en-US"
-            ) // Set your preferred language here
-            intent.putExtra(
-                RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,
-                "en-US"
-            ) // Set your preferred language here
-
             stt?.startListening(intent)
         }
     }

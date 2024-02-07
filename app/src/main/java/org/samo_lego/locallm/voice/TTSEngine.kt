@@ -134,7 +134,7 @@ class TTSEngine(context: Context) {
         }
 
     companion object {
-        private val mdRegex = Regex("([#*_~`])")
+        private val mdRegex = Regex("([#*_~`|])")
         private val sentenceEnd = setOf('.', '?', '!', ':', ',', '\n')
         fun init(context: Context) {
             if (!::ttsEngine.isInitialized) {
