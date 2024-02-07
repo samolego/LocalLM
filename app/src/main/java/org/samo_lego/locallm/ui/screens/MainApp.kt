@@ -1,6 +1,7 @@
 package org.samo_lego.locallm.ui.screens
 
 import android.content.Context
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,6 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -66,16 +68,17 @@ fun AppView() {
     ModalNavigationDrawer(
         drawerContent = {
             ModalDrawerSheet(
-                modifier = Modifier.width(300.dp),
+                modifier = Modifier
+                    .width(300.dp)
+                    .background(Color.Transparent),
             ) {
-                AppDrawer(navController)
+                AppDrawer(navController, drawerState)
             }
         },
         drawerState = drawerState,
-        scrimColor = MaterialTheme.colorScheme.primaryContainer,
     ) {
         NavHost(navController = navController, startDestination = Routes.HOME.path) {
-            composable(Routes.SETTINGS.path) { Settings() }
+            composable(Routes.SETTINGS.path) { Settings(navController) }
             composable(Routes.HOME.path) {
                 Scaffold(
                     topBar = {
