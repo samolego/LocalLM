@@ -22,6 +22,7 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -172,15 +173,19 @@ fun AppView() {
                                 )
                             } else {
                                 Row {
-                                    Text("Go to settings and select a model to load.")
+                                    Text("No models found.")
                                 }
-                                Row {
-                                    IconButton(
+                                Row(
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                ) {
+                                    TextButton(
                                         onClick = {
                                             navController.navigate(Routes.ADD_MODEL)
                                         },
                                     ) {
                                         Icon(Icons.Default.Add, "Add model")
+                                        Text(text = "Add model")
                                     }
                                 }
                                 // Todo add a nice button to create model card

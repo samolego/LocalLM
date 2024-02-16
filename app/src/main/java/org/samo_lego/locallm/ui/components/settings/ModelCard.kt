@@ -34,11 +34,14 @@ import org.samo_lego.locallm.data.LMProperties
 
 
 @Composable
-fun ModelCard(modelProperties: LMProperties, onChooseModel: (Uri?) -> Unit) {
+fun ModelCard(
+    modelProperties: LMProperties,
+    pathState: MutableState<String> = mutableStateOf(modelProperties.modelPath),
+    allowModel: (Uri?) -> Boolean
+) {
     var modelName by remember { mutableStateOf(modelProperties.name) }
     var systemPrompt by remember { mutableStateOf(modelProperties.systemPrompt) }
     var useChatML by remember { mutableStateOf(modelProperties.useChatML) }
-    val pathState = mutableStateOf(modelProperties.modelPath)
     var path by remember { pathState }
 
 
@@ -90,9 +93,8 @@ fun ModelCard(modelProperties: LMProperties, onChooseModel: (Uri?) -> Unit) {
                     modelProperties.name = modelName
                 }
 
-                onChooseModel(uri)
-                // Update model path
-                if (uri?.path != null) {
+                if (uri != null && uri.path != null && allowModel(uri)) {
+                    // Update model path
                     path = uri.path!!
                     modelProperties.modelPath = uri.path!!
                 }
@@ -153,7 +155,6 @@ fun ModelPathChooser(path: MutableState<String>, onChoose: (Uri?) -> Unit) {
         label = {
             Text(text = "Model path")
         },
-        enabled = path.value == "",
         readOnly = true,
         onValueChange = { },
     )
@@ -181,10 +182,10 @@ fun ModelChooser(selectedItem: String?, onChoose: (LMProperties) -> Unit) {
                 expanded = false
             },
         ) {
-            AvailableModels.instance.models().forEach { (name, properties) ->
+            AvailableModels.instance.models().forEach { properties ->
                 DropdownMenuItem(
                     text = {
-                        Text(text = name, style = MaterialTheme.typography.bodyMedium)
+                        Text(text = properties.name, style = MaterialTheme.typography.bodyMedium)
                     },
                     onClick = {
                         onChoose(properties)
@@ -192,7 +193,6 @@ fun ModelChooser(selectedItem: String?, onChoose: (LMProperties) -> Unit) {
                     }
                 )
             }
-
         }
     }
 }

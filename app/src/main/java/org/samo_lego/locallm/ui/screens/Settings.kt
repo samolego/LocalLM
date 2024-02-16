@@ -120,13 +120,16 @@ fun Settings(navController: NavHostController?) {
 
             ModelCard(
                 modelProperties = modelProperties,
-                onChooseModel = { uri ->
+                allowModel = { uri ->
                     if (uri != null) {
                         modelUri = uri
                         showFileDialog = true
 
                         AvailableModels.instance.saveModels()
+                        return@ModelCard true
                     }
+
+                    return@ModelCard false
                 }
             )
 

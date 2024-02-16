@@ -7,29 +7,24 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.nio.charset.StandardCharsets
-import java.util.TreeMap
+import java.util.TreeSet
 
 
 @Serializable
 class AvailableModels {
-    private val models: MutableMap<String, LMProperties> = TreeMap()
+    private val models: MutableSet<LMProperties> = TreeSet()
 
     fun addModel(properties: LMProperties) {
-        models[properties.name] = properties
+        models.add(properties)
         saveModels()
     }
 
     fun getModel(name: String): LMProperties? {
-        return models[name]
+        return models.find { it.name == name }
     }
 
-    fun models(): Map<String, LMProperties> {
+    fun models(): Set<LMProperties> {
         return models
-    }
-
-    fun removeModel(name: String) {
-        models.remove(name)
-        saveModels()
     }
 
 
@@ -44,14 +39,18 @@ class AvailableModels {
         } else {
             // Read file
             val content = file.readText(StandardCharsets.UTF_8)
-            val availableModels = Json.decodeFromString(content) as AvailableModels
-            models.putAll(availableModels.models)
+            try {
+                val availableModels = Json.decodeFromString(content) as AvailableModels
+                models.addAll(availableModels.models)
+            } catch (e: Exception) {
+                Log.e("AvailableModels", "Failed to parse models: $e")
+            }
         }
     }
 
     fun saveModels() {
         val file = File(appPath, filename)
-        var write = false
+        var write = file.exists()
         if (!file.exists()) {
             try {
                 file.createNewFile()
