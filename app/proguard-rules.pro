@@ -12,6 +12,8 @@
 #   public *;
 #}
 -keep class de.kherud.llama.** { *; }
+-keep class org.samo_lego.locallm.data.LMPropertiesKt { *; }
+-keep class org.samo_lego.locallm.data.AvailableModels { models; }
 
 # Uncomment this to preserve the line number information for
 # debugging stack traces.

@@ -1,4 +1,4 @@
-package org.samo_lego.locallm.config
+package org.samo_lego.locallm.data
 
 import android.content.SharedPreferences
 
@@ -49,8 +49,13 @@ class AppSettings(private val sharedPreferences: SharedPreferences) {
     }
 }
 
-enum class SettingsKeys(key: String) {
+enum class SettingsKeys(val key: String) {
     USE_TTS("useTTS"),
     CLOUD_STT("cloudSTT"),
     AUTO_SEND("autoSendAfterRecognition"),
+    LAST_MODEL("lastModel");
+
+    override fun toString(): String {
+        return key
+    }
 }

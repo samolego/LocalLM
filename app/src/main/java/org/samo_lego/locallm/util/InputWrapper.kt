@@ -1,6 +1,6 @@
 package org.samo_lego.locallm.util
 
-import org.samo_lego.locallm.config.LMProperties
+import org.samo_lego.locallm.data.LMProperties
 import org.samo_lego.locallm.util.ChatMLUtil.Companion.toChatML
 
 fun processUserText(text: String, properties: LMProperties): String {

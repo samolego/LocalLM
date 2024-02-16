@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import org.samo_lego.locallm.util.ChatMLUtil
 
 interface TextResponse {
 
@@ -21,13 +22,35 @@ class UserMessage(val message: String) : TextResponse {
 class BotMessage : TextResponse {
 
     val tokens = mutableStateOf("")
+    private var savedTokens = ""
 
     fun removeRange(start: Int, end: Int) {
         tokens.value = tokens.value.removeRange(start, end)
     }
 
     fun appendToken(token: String) {
-        tokens.value += token
+        // Check for ChatML end
+        val sentence = tokens.value + savedTokens + token
+        if (!ChatMLUtil.isPotentialEnd(sentence)) {
+            tokens.value = sentence
+            savedTokens = ""
+        } else {
+            savedTokens += token
+        }
+    }
+
+    fun isComplete() = savedTokens.contains(ChatMLUtil.im_end)
+
+    fun complete() {
+        tokens.value += savedTokens
+        // Remove chatml suffix
+        if (tokens.value.contains(ChatMLUtil.im_end)) {
+            removeRange(
+                tokens.value.indexOf(ChatMLUtil.im_end),
+                tokens.value.length
+            )
+        }
+        savedTokens = ""
     }
 
     @Composable

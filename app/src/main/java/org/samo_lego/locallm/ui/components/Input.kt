@@ -29,8 +29,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import org.samo_lego.locallm.config.SettingsKeys
-import org.samo_lego.locallm.config.appSettings
+import org.samo_lego.locallm.data.SettingsKeys
+import org.samo_lego.locallm.data.appSettings
 import org.samo_lego.locallm.voice.STTEngine
 import kotlin.math.abs
 import kotlin.math.sqrt

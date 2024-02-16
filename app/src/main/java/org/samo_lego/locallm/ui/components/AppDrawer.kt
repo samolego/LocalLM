@@ -44,7 +44,7 @@ fun AppDrawer(navController: NavHostController, drawerState: DrawerState) {
                                 }
                             }
                         ) {
-                            Icon(Icons.Filled.Settings, "Localized description")
+                            Icon(Icons.Filled.Settings, "Settings button")
                             Text(
                                 modifier = Modifier.align(Alignment.CenterVertically),
                                 text = "Settings",

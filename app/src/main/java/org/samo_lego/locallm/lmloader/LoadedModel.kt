@@ -5,20 +5,18 @@ import de.kherud.llama.InferenceParameters
 import de.kherud.llama.LlamaModel
 import de.kherud.llama.LogLevel
 import de.kherud.llama.ModelParameters
-import org.samo_lego.locallm.config.LMProperties
+import org.samo_lego.locallm.data.LMProperties
 import org.samo_lego.locallm.util.processUserText
-import java.io.File
 
 class LoadedModel(
-    val path: String,
+    var properties: LMProperties,
     modelParams: ModelParameters = ModelParameters(),
-    var properties: LMProperties = LMProperties(File(path).name, path),
 ) :
     AutoCloseable {
     private val model: LlamaModel
 
     init {
-        model = LlamaModel(path, modelParams)
+        model = LlamaModel(properties.modelPath, modelParams)
     }
 
     fun suggest(
@@ -41,17 +39,17 @@ class LoadedModel(
 
     override fun equals(other: Any?): Boolean {
         if (other is LoadedModel) {
-            return this.path == other.path
+            return this.properties.modelPath == other.properties.modelPath
         }
         return false
     }
 
     override fun hashCode(): Int {
-        return path.hashCode()
+        return properties.modelPath.hashCode()
     }
 
     override fun toString(): String {
-        return "LMLoader(path=$path)"
+        return "LMLoader(path=$properties.modelPath)"
     }
 
     override fun close() {

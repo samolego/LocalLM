@@ -5,10 +5,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import org.samo_lego.locallm.data.LMProperties
+import org.samo_lego.locallm.data.SettingsKeys
+import org.samo_lego.locallm.data.appSettings
 
 class LMHolder {
     companion object {
-        private lateinit var loadedModel: LoadedModel
+        private var loadedModel: LoadedModel? = null
 
         private val suggestQueue = mutableListOf<Suggestion>()
         private var modelLoading: Job? = null
@@ -19,9 +22,9 @@ class LMHolder {
             onEnd: () -> Unit = {},
             inferParams: InferenceParameters = InferenceParameters(),
         ) {
-            if (::loadedModel.isInitialized) {
+            if (loadedModel != null) {
                 CoroutineScope(Dispatchers.Default).launch {
-                    loadedModel.suggest(question, onSuggestion, onEnd, inferParams)
+                    loadedModel!!.suggest(question, onSuggestion, onEnd, inferParams)
                 }
             } else {
                 suggestQueue.add(Suggestion(question, onSuggestion, onEnd, inferParams))
@@ -39,8 +42,15 @@ class LMHolder {
             }
         }
 
+        fun isModelLoaded(): Boolean {
+            return loadedModel != null
+        }
 
-        suspend fun currentModel(): LoadedModel {
+        fun isModelLoading(): Boolean {
+            return modelLoading != null
+        }
+
+        suspend fun currentModel(): LoadedModel? {
             if (modelLoading != null) {
                 modelLoading!!.join()
                 modelLoading = null
@@ -49,14 +59,15 @@ class LMHolder {
             return loadedModel
         }
 
-        fun setModel(model: String) {
-            if (::loadedModel.isInitialized) {
-                loadedModel.close()
-            }
+        fun setModel(model: LMProperties, onLoadComplete: () -> Unit = {}) {
+            loadedModel?.close()
+            loadedModel = null
 
             modelLoading = CoroutineScope(Dispatchers.Default).launch {
                 loadedModel = LoadedModel(model)
+                appSettings.setString(SettingsKeys.LAST_MODEL, model.name)
                 onModelLoaded()
+                onLoadComplete()
             }
         }
     }

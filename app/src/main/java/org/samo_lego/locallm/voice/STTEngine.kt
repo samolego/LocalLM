@@ -12,8 +12,8 @@ import android.speech.SpeechRecognizer
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import org.samo_lego.locallm.config.SettingsKeys
-import org.samo_lego.locallm.config.appSettings
+import org.samo_lego.locallm.data.SettingsKeys
+import org.samo_lego.locallm.data.appSettings
 import java.util.Locale
 
 

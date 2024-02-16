@@ -1,8 +1,9 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("kotlin-parcelize")
+    kotlin("android")
+    kotlin("plugin.serialization")
 }
+
 
 android {
     namespace = "org.samo_lego.locallm"
@@ -122,8 +123,9 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.navigation:navigation-compose:2.7.6")
+    implementation("androidx.compose.material3:material3")  // Below we import a fix for loading indicators
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation("androidx.documentfile:documentfile:1.0.1")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
@@ -133,9 +135,15 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     // Icons
-    implementation("androidx.compose.material:material-icons-extended:1.6.0")
+    implementation("androidx.compose.material:material-icons-extended:1.6.1")
 
     // For markdown support
     implementation("com.halilibo.compose-richtext:richtext-commonmark:0.20.0")
     implementation("com.halilibo.compose-richtext:richtext-ui-material3:0.20.0")
+
+    // Fix issue with loading indicators crashing app
+    implementation("androidx.compose.animation:animation:1.6.1")
+
+    // Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 }

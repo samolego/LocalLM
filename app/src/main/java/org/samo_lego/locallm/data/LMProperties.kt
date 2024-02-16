@@ -1,15 +1,14 @@
-package org.samo_lego.locallm.config
+package org.samo_lego.locallm.data
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Serializable
 
 
 const val defaultSystem = "You are a local helpful assistant."
 
-@Parcelize  // todo
+@Serializable
 data class LMProperties(
     var name: String,
-    val modelPath: String,
+    var modelPath: String,
     var systemPrompt: String = defaultSystem,
     var useChatML: Boolean = true,
-) : Parcelable
+)

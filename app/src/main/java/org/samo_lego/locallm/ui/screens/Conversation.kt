@@ -22,14 +22,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.samo_lego.locallm.config.SettingsKeys
-import org.samo_lego.locallm.config.appSettings
+import org.samo_lego.locallm.data.SettingsKeys
+import org.samo_lego.locallm.data.appSettings
 import org.samo_lego.locallm.lmloader.LMHolder
 import org.samo_lego.locallm.ui.components.Input
 import org.samo_lego.locallm.ui.components.message.BotMessage
 import org.samo_lego.locallm.ui.components.message.TextResponse
 import org.samo_lego.locallm.ui.components.message.UserMessage
-import org.samo_lego.locallm.util.ChatMLUtil
 import org.samo_lego.locallm.voice.tts
 
 private val messages: MutableList<TextResponse> = mutableStateListOf()
@@ -103,7 +102,6 @@ fun Conversation() {
                                 Log.v("LocalLM", "Suggestion: $suggestion")
                                 if (suggestion.isEmpty()) {
                                     onEndSuggestions(
-                                        botResponse.tokens.value,
                                         botResponse,
                                         ttScope
                                     )
@@ -113,9 +111,8 @@ fun Conversation() {
                                 } else {
                                     botResponse.appendToken(suggestion)
 
-                                    if (botResponse.tokens.value.contains(ChatMLUtil.im_end)) {
+                                    if (botResponse.isComplete()) {
                                         onEndSuggestions(
-                                            botResponse.tokens.value,
                                             botResponse,
                                             ttScope
                                         )
@@ -144,7 +141,7 @@ fun Conversation() {
                                 return@suggest true
                             },
                                 onEnd = {
-                                    onEndSuggestions(botResponse.tokens.value, botResponse, ttScope)
+                                    onEndSuggestions(botResponse, ttScope)
                                     allowGenerating = false
                                 })
                         }
@@ -160,15 +157,9 @@ fun Conversation() {
     }
 }
 
-private fun onEndSuggestions(botTokens: String, botResponse: BotMessage, ttScope: CoroutineScope) {
+private fun onEndSuggestions(botResponse: BotMessage, ttScope: CoroutineScope) {
     // Ended stream
-    // Check for ChatML end of sentence
-    if (botTokens.contains(ChatMLUtil.im_end)) {
-        botResponse.removeRange(
-            botTokens.indexOf(ChatMLUtil.im_end),
-            botTokens.length
-        )
-    }
+    botResponse.complete()
     // Finish the sentence
     tts.finishSentence(ttScope)
 }
