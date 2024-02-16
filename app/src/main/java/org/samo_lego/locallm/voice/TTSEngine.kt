@@ -75,7 +75,7 @@ class TTSEngine(context: Context) {
     }
 
     private fun canSpeak(word: String): Boolean {
-        return word.last() in sentenceEnd
+        return word.isNotEmpty() && word.last() in sentenceEnd
     }
 
     private suspend fun TextToSpeech.awaitSpeak(
