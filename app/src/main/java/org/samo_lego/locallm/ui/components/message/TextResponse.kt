@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.tooling.preview.Preview
 import org.samo_lego.locallm.util.ChatMLUtil
 
 interface TextResponse {
@@ -53,6 +54,7 @@ class BotMessage : TextResponse {
         savedTokens = ""
     }
 
+    @Preview
     @Composable
     override fun Render() {
         val message by remember { tokens }

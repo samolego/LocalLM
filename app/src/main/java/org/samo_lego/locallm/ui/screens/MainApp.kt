@@ -3,10 +3,12 @@ package org.samo_lego.locallm.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -28,7 +30,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,6 +47,7 @@ import org.samo_lego.locallm.data.appSettings
 import org.samo_lego.locallm.lmloader.LMHolder
 import org.samo_lego.locallm.ui.components.AppDrawer
 import org.samo_lego.locallm.ui.navigation.Routes
+import org.samo_lego.locallm.ui.navigation.navigate
 
 
 const val appTitle = "LocalLM"
@@ -55,17 +57,20 @@ fun MainApp() {
     AppView()
 }
 
+val modelLoadedState = mutableStateOf(false)
+val modelAvailableState = mutableStateOf(false)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
 fun AppView() {
-
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val navController = rememberNavController()
 
-    var modelLoaded by remember { mutableStateOf(false) }
-    var modelAvailable by remember { mutableStateOf(false) }
+    val modelLoaded by remember { modelLoadedState }
+    val modelAvailable by remember { modelAvailableState }
+
 
     // Set up model in the background
     LaunchedEffect(Unit) {
@@ -73,11 +78,9 @@ fun AppView() {
             appSettings.getString(SettingsKeys.LAST_MODEL, "").let { modelName ->
                 if (modelName.isNotEmpty()) {
                     AvailableModels.instance.getModel(modelName)?.let { model ->
-                        modelAvailable = true
+                        modelAvailableState.value = true
                         // Launch coroutine to load model
-                        LMHolder.setModel(model) {
-                            modelLoaded = true
-                        }
+                        LMHolder.setModel(model)
                     }
                 }
             }
@@ -98,6 +101,7 @@ fun AppView() {
     ) {
         NavHost(navController = navController, startDestination = Routes.HOME.path) {
             composable(Routes.SETTINGS.path) { Settings(navController) }
+            composable(Routes.ADD_MODEL.path) { NewModelScreen(navController) }
             composable(Routes.HOME.path) {
                 Scaffold(
                     topBar = {
@@ -167,8 +171,20 @@ fun AppView() {
                                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
                                 )
                             } else {
-                                Text("Go to settings and select a model to load.")
+                                Row {
+                                    Text("Go to settings and select a model to load.")
+                                }
+                                Row {
+                                    IconButton(
+                                        onClick = {
+                                            navController.navigate(Routes.ADD_MODEL)
+                                        },
+                                    ) {
+                                        Icon(Icons.Default.Add, "Add model")
+                                    }
+                                }
                                 // Todo add a nice button to create model card
+
                             }
                         }
                     }

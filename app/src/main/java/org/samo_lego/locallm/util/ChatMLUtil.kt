@@ -1,7 +1,5 @@
 package org.samo_lego.locallm.util
 
-import org.jetbrains.annotations.TestOnly
-
 
 class ChatMLUtil {
     companion object {
@@ -31,14 +29,5 @@ class ChatMLUtil {
 
             return ix != 0
         }
-    }
-
-    // Unit tests for isPotentialEnd
-    @TestOnly
-    fun testIsPotentialEnd() {
-        assert(isPotentialEnd("Hello <|im_end|>"))
-        assert(isPotentialEnd("Hello <|im_end|> world"))
-        assert(isPotentialEnd("Hello <im_"))
-        assert(!isPotentialEnd("Hello World!"))
     }
 }

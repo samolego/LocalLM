@@ -18,6 +18,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,13 +35,16 @@ import org.samo_lego.locallm.data.LMProperties
 
 @Composable
 fun ModelCard(modelProperties: LMProperties, onChooseModel: (Uri?) -> Unit) {
+    var modelName by remember { mutableStateOf(modelProperties.name) }
     var systemPrompt by remember { mutableStateOf(modelProperties.systemPrompt) }
     var useChatML by remember { mutableStateOf(modelProperties.useChatML) }
-    val path by remember { mutableStateOf(modelProperties.modelPath) }
+    val pathState = mutableStateOf(modelProperties.modelPath)
+    var path by remember { pathState }
 
 
     // todo - is this needed?
     LaunchedEffect(modelProperties) {
+        modelName = modelProperties.name
         systemPrompt = modelProperties.systemPrompt
         useChatML = modelProperties.useChatML
     }
@@ -50,6 +54,19 @@ fun ModelCard(modelProperties: LMProperties, onChooseModel: (Uri?) -> Unit) {
             .fillMaxWidth(),
     ) {
         Text(text = "Model properties", fontWeight = FontWeight.Bold)
+
+        OutlinedTextField(
+            modifier = Modifier
+                .fillMaxWidth(),
+            label = {
+                Text(text = "Model name")
+            },
+            value = modelName,
+            onValueChange = { value ->
+                modelName = value
+                modelProperties.name = value
+            },
+        )
 
         OutlinedTextField(
             modifier = Modifier
@@ -65,13 +82,20 @@ fun ModelCard(modelProperties: LMProperties, onChooseModel: (Uri?) -> Unit) {
         )
 
         ModelPathChooser(
-            path,
+            pathState,
             onChoose = { uri ->
                 // Set model name if empty
-                if (modelProperties.name.isEmpty()) {
-                    modelProperties.name = uri?.lastPathSegment ?: "Unknown"
+                modelName.ifEmpty {
+                    modelName = uri?.lastPathSegment ?: "Unknown"
+                    modelProperties.name = modelName
                 }
+
                 onChooseModel(uri)
+                // Update model path
+                if (uri?.path != null) {
+                    path = uri.path!!
+                    modelProperties.modelPath = uri.path!!
+                }
             }
         )
 
@@ -95,6 +119,7 @@ fun ModelCard(modelProperties: LMProperties, onChooseModel: (Uri?) -> Unit) {
                 onCheckedChange = { value ->
                     useChatML = value
                     modelProperties.useChatML = value
+                    AvailableModels.instance.saveModels()
                 },
             )
         }
@@ -103,7 +128,7 @@ fun ModelCard(modelProperties: LMProperties, onChooseModel: (Uri?) -> Unit) {
 
 
 @Composable
-fun ModelPathChooser(path: String, onChoose: (Uri?) -> Unit) {
+fun ModelPathChooser(path: MutableState<String>, onChoose: (Uri?) -> Unit) {
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { docUri ->
             onChoose(docUri)
@@ -124,11 +149,11 @@ fun ModelPathChooser(path: String, onChoose: (Uri?) -> Unit) {
                 // Launch file picker
                 launcher.launch(arrayOf("*/*"))
             },
-        value = path,
+        value = path.value,
         label = {
             Text(text = "Model path")
         },
-        enabled = path == "",
+        enabled = path.value == "",
         readOnly = true,
         onValueChange = { },
     )

@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.samo_lego.locallm.util.ChatMLUtil
 import org.samo_lego.locallm.util.ChatMLUtil.Companion.im_end
 import java.util.Locale
 import kotlin.coroutines.resume
@@ -25,6 +26,7 @@ class TTSEngine(context: Context) {
 
     private val sentenceFlow = MutableSharedFlow<String>()
     private val currentSentence = StringBuilder()
+    private val holdedTokens = StringBuilder()
     private val tts: TextToSpeech
 
     init {
@@ -51,12 +53,18 @@ class TTSEngine(context: Context) {
     }
 
     fun addWord(scope: CoroutineScope, word: String) {
+        holdedTokens.append(word)
+        if (ChatMLUtil.isPotentialEnd(holdedTokens.toString())) {
+            return
+        }
+        val token = holdedTokens.replace(mdRegex, "")
+        holdedTokens.clear()
         // Remove markdown for TTS
-        currentSentence.append(word.replace(mdRegex, ""))
-        Log.d("TTSEngine", "Added word: $word. Current sentence: $currentSentence")
+        currentSentence.append(token)
+        Log.d("TTSEngine", "Added word: $token. Current sentence: $currentSentence")
 
         // Check if we have a full sentence
-        if (canSpeak(word)) {
+        if (canSpeak(token)) {
             val toSpeak = currentSentence.toString().replace(im_end, "")
             currentSentence.clear()
 
@@ -105,10 +113,12 @@ class TTSEngine(context: Context) {
     fun reset() {
         // Clear current sentence
         currentSentence.clear()
+        holdedTokens.clear()
         tts.stop()
     }
 
     fun finishSentence(ttScope: CoroutineScope) {
+        holdedTokens.clear()
         if (currentSentence.isEmpty()) {
             return
         }

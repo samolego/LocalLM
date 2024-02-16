@@ -5,22 +5,17 @@ package org.samo_lego.locallm.ui.screens
 import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -30,31 +25,29 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.samo_lego.locallm.data.AvailableModels
 import org.samo_lego.locallm.data.LMProperties
 import org.samo_lego.locallm.lmloader.LMHolder
 import org.samo_lego.locallm.ui.components.settings.ModelCard
 import org.samo_lego.locallm.ui.components.settings.ModelChooser
+import org.samo_lego.locallm.ui.components.settings.ModelCopyDialog
 import java.io.File
 import java.util.UUID
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Settings(navController: NavHostController) {
+fun Settings(navController: NavHostController?) {
     val coroutineScope = rememberCoroutineScope()
     var showFileDialog by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-
     var modelUri = Uri.EMPTY
-    var deleteFileAfterCopy by remember { mutableStateOf(false) }
 
     var modelProperties by remember {
         mutableStateOf(
@@ -79,8 +72,9 @@ fun Settings(navController: NavHostController) {
                 navigationIcon = {
                     IconButton(
                         onClick = {
+                            AvailableModels.instance.saveModels()
                             // Go back
-                            navController.popBackStack()
+                            navController?.popBackStack()
                         }
                     ) {
                         Icon(
@@ -99,64 +93,22 @@ fun Settings(navController: NavHostController) {
         ) {
 
             if (showFileDialog) {
-                AlertDialog(
-                    onDismissRequest = {},
-                    title = {
-                        Text("Copy model")
+                ModelCopyDialog(
+                    onCancel = {
+                        showFileDialog = false
                     },
-                    text = {
-                        Column {
-                            Row {
-                                Text("Model will be copied to the app's data directory. Continue?")
-                            }
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        deleteFileAfterCopy = !deleteFileAfterCopy
-                                    }
-                            ) {
-                                // Delete model checkbox
-                                Checkbox(
-                                    checked = deleteFileAfterCopy,
-                                    onCheckedChange = {
-                                        deleteFileAfterCopy = it
-                                    },
-                                )
-                                Text("Delete original file")
-                            }
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(
-                            onClick = {
-                                showFileDialog = false
-                            }
-                        ) {
-                            Text("Cancel")
-                        }
-                    },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                showFileDialog = false
+                    onConfirm = { deleteAfterCopy ->
+                        showFileDialog = false
 
-                                coroutineScope.launch {
-                                    withContext(coroutineScope.coroutineContext) {
-                                        prepareAndRunModel(
-                                            context,
-                                            modelUri,
-                                            modelProperties,
-                                            deleteFileAfterCopy
-                                        )
-                                    }
-                                }
-                            }
-                        ) {
-                            Text("Ok")
+                        coroutineScope.launch {
+                            prepareAndRunModel(
+                                context,
+                                modelUri,
+                                modelProperties,
+                                deleteAfterCopy
+                            )
                         }
-                    },
+                    }
                 )
             }
             LaunchedEffect(Unit) {
@@ -172,6 +124,8 @@ fun Settings(navController: NavHostController) {
                     if (uri != null) {
                         modelUri = uri
                         showFileDialog = true
+
+                        AvailableModels.instance.saveModels()
                     }
                 }
             )
@@ -182,10 +136,17 @@ fun Settings(navController: NavHostController) {
                 selectedItem = modelProperties.name,
                 onChoose = { properties ->
                     modelProperties = properties
+                    LMHolder.setModel(properties)
                 }
             )
         }
     }
+}
+
+@Preview
+@Composable
+fun SettingsPreview() {
+    Settings(null)
 }
 
 fun prepareAndRunModel(

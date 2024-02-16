@@ -8,6 +8,8 @@ import kotlinx.coroutines.launch
 import org.samo_lego.locallm.data.LMProperties
 import org.samo_lego.locallm.data.SettingsKeys
 import org.samo_lego.locallm.data.appSettings
+import org.samo_lego.locallm.ui.screens.modelAvailableState
+import org.samo_lego.locallm.ui.screens.modelLoadedState
 
 class LMHolder {
     companion object {
@@ -42,14 +44,6 @@ class LMHolder {
             }
         }
 
-        fun isModelLoaded(): Boolean {
-            return loadedModel != null
-        }
-
-        fun isModelLoading(): Boolean {
-            return modelLoading != null
-        }
-
         suspend fun currentModel(): LoadedModel? {
             if (modelLoading != null) {
                 modelLoading!!.join()
@@ -59,15 +53,23 @@ class LMHolder {
             return loadedModel
         }
 
-        fun setModel(model: LMProperties, onLoadComplete: () -> Unit = {}) {
+        fun setModel(model: LMProperties) {
+            if (loadedModel != null && loadedModel!!.properties.modelPath == model.modelPath) {
+                // Just switch the properties
+                loadedModel!!.properties = model
+
+                return
+            }
             loadedModel?.close()
+            modelLoadedState.value = false
+            modelAvailableState.value = true
             loadedModel = null
 
             modelLoading = CoroutineScope(Dispatchers.Default).launch {
                 loadedModel = LoadedModel(model)
                 appSettings.setString(SettingsKeys.LAST_MODEL, model.name)
+                modelLoadedState.value = true
                 onModelLoaded()
-                onLoadComplete()
             }
         }
     }

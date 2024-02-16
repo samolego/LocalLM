@@ -49,10 +49,21 @@ class AvailableModels {
         }
     }
 
-    private fun saveModels() {
+    fun saveModels() {
         val file = File(appPath, filename)
+        var write = false
+        if (!file.exists()) {
+            try {
+                file.createNewFile()
+                write = true
+            } catch (_: Exception) {
+                Log.e("AvailableModels", "Failed to create file")
+            }
+        }
 
-        file.writeText(this.toString())
+        if (write) {
+            file.writeText(this.toString())
+        }
     }
 
     override fun toString(): String {
@@ -61,7 +72,7 @@ class AvailableModels {
 
     companion object {
         val instance = AvailableModels()
-        private var appPath = ""
+        private var appPath = "."
         const val filename = "models.json"
 
         fun init(appPath: String) {
