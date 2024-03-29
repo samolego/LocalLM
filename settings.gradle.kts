@@ -15,4 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "LocalLM"
 include(":app")
- 
+include(":lib:whispercpp")

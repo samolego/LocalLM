@@ -43,8 +43,6 @@ android {
             useSupportLibrary = true
         }
 
-
-
         externalNativeBuild {
             cmake {
                 cppFlags += ""
@@ -135,15 +133,18 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     // Icons
-    implementation("androidx.compose.material:material-icons-extended:1.6.1")
+    implementation("androidx.compose.material:material-icons-extended:1.6.4")
 
     // For markdown support
     implementation("com.halilibo.compose-richtext:richtext-commonmark:0.20.0")
     implementation("com.halilibo.compose-richtext:richtext-ui-material3:0.20.0")
 
     // Fix issue with loading indicators crashing app
-    implementation("androidx.compose.animation:animation:1.6.1")
+    implementation("androidx.compose.animation:animation:1.6.4")
 
     // Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+
+
+    implementation(project(":lib:whispercpp"))
 }
