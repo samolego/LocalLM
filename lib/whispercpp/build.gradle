@@ -18,6 +18,7 @@ android {
         }
         externalNativeBuild {
             cmake {
+                arguments += "-DCMAKE_BUILD_TYPE=Release"
                 // When set, builds whisper.android against the version located
                 // at GGML_HOME instead of the copy bundled with whisper.cpp.
                 if (

@@ -13,7 +13,8 @@
 #}
 -keep class de.kherud.llama.** { *; }
 -keep class org.samo_lego.locallm.data.LMPropertiesKt { *; }
--keep class org.samo_lego.locallm.data.AvailableModels { models; }
+-keep class org.samo_lego.locallm.data.AvailableModels { *; }
+-keep class com.whispercpp.whisper.LibWhisperKt { *; }
 
 # Uncomment this to preserve the line number information for
 # debugging stack traces.

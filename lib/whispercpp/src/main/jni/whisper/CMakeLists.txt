@@ -6,14 +6,14 @@ set(CMAKE_CXX_STANDARD 11)
 
 include(FetchContent)
 FetchContent_Declare(
-        whicper.cpp-repo
+        whisper.cpp-repo
         GIT_REPOSITORY https://github.com/ggerganov/whisper.cpp.git
         GIT_TAG v1.5.4
 )
 FetchContent_MakeAvailable(whisper.cpp-repo)
 
 # Alias the whisper.cpp source directory to WHISPER_LIB_DIR
-set(WHISPER_LIB_DIR ${whisper.cpp-repo_SOURCE_DIR}/..)
+set(WHISPER_LIB_DIR ${whisper.cpp-repo_SOURCE_DIR})
 
 message(STATUS "WHISPER_LIB_DIR: ${WHISPER_LIB_DIR}")
 
@@ -86,6 +86,6 @@ elseif (${ANDROID_ABI} STREQUAL "armeabi-v7a")
     build_library("whisper_vfpv4")
 endif ()
 
-build_library("whisper") # Default target
+#build_library("whisper") # Default target
 
 include_directories(${WHISPER_LIB_DIR})

@@ -14,3 +14,4 @@
 .externalNativeBuild
 .cxx
 local.properties
+app/src/main/assets/models/model_q8_0.ggml

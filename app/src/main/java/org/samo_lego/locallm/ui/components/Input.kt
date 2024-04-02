@@ -1,6 +1,5 @@
 package org.samo_lego.locallm.ui.components
 
-import android.speech.SpeechRecognizer
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,16 +31,21 @@ import androidx.compose.ui.unit.dp
 import org.samo_lego.locallm.data.SettingsKeys
 import org.samo_lego.locallm.data.appSettings
 import org.samo_lego.locallm.voice.STTEngine
+import org.samo_lego.locallm.voice.WhisperSTTEngine
 import kotlin.math.abs
 import kotlin.math.sqrt
 
+lateinit var whisperSTTEngine: STTEngine
 @Composable
 fun Input(
     onTextSend: (String) -> Unit = {},
     onForceStopGeneration: () -> Unit = {},
     isGenerating: Boolean
 ) {
-    val sttEngine = STTEngine(LocalContext.current)
+    //val googleSttEngine = GoogleSTTEngine(LocalContext.current)
+    if (!::whisperSTTEngine.isInitialized) {
+        whisperSTTEngine = WhisperSTTEngine(LocalContext.current.assets)
+    }
 
     var text by rememberSaveable {
         mutableStateOf("")
@@ -50,9 +54,9 @@ fun Input(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        if (sttEngine.isAvailable()) {
+        if (whisperSTTEngine.isAvailable()) {
             MicInput(
-                speechToText = sttEngine,
+                speechToText = whisperSTTEngine,
             ) { recognized ->
                 if (appSettings.getBool(SettingsKeys.AUTO_SEND, true)) {
                     onTextSend(recognized)
@@ -92,7 +96,6 @@ fun Input(
 
 @Composable
 fun MicInput(speechToText: STTEngine, onComplete: (String) -> Unit = {}) {
-    // Last 5 rms values
     var rms by rememberSaveable {
         mutableFloatStateOf(0f)
     }
@@ -140,19 +143,7 @@ fun MicInput(speechToText: STTEngine, onComplete: (String) -> Unit = {}) {
             onClick = {
                 // Launch speech recognition
                 speechToText.startListening(
-                    onResults = { results ->
-                        if (results != null) {
-                            val data =
-                                results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                            if (data != null) {
-                                // Merge all recognized words into one string
-                                val recognized = data.joinToString("")
-
-                                // Send recognized text
-                                onComplete(recognized)
-                            }
-                        }
-                    },
+                    onResults = onComplete,
                     onError = {
                         rms = 0f
                         isRecognizing = false
@@ -165,6 +156,7 @@ fun MicInput(speechToText: STTEngine, onComplete: (String) -> Unit = {}) {
                         isRecognizing = false
                     },
                     onRmsChanged = {
+                        println(it)
                         rms = 0.25f * rms + 0.75f * sqrt(abs(it))
                     }
                 )
