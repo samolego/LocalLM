@@ -19,17 +19,18 @@ class WhisperContext private constructor(private var ptr: Long) {
         Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     )
 
-    suspend fun transcribeData(data: FloatArray): String = withContext(scope.coroutineContext) {
-        require(ptr != 0L)
-        val numThreads = WhisperCpuConfig.preferredThreadCount
-        Log.d(LOG_TAG, "Selecting $numThreads threads")
-        WhisperLib.fullTranscribe(ptr, numThreads, data)
-        val textCount = WhisperLib.getTextSegmentCount(ptr)
-        return@withContext buildString {
-            for (i in 0 until textCount) {
-                append(WhisperLib.getTextSegment(ptr, i))
+    suspend fun transcribeData(data: FloatArray, lang: String = "en"): String =
+        withContext(scope.coroutineContext) {
+            require(ptr != 0L)
+            val numThreads = WhisperCpuConfig.preferredThreadCount
+            Log.d(LOG_TAG, "Selecting $numThreads threads")
+            WhisperLib.fullTranscribe(ptr, numThreads, data, lang)
+            val textCount = WhisperLib.getTextSegmentCount(ptr)
+            return@withContext buildString {
+                for (i in 0 until textCount) {
+                    append(WhisperLib.getTextSegment(ptr, i))
+                }
             }
-        }
     }
 
     suspend fun benchMemory(nthreads: Int): String = withContext(scope.coroutineContext) {
@@ -131,7 +132,13 @@ private class WhisperLib {
         external fun initContextFromAsset(assetManager: AssetManager, assetPath: String): Long
         external fun initContext(modelPath: String): Long
         external fun freeContext(contextPtr: Long)
-        external fun fullTranscribe(contextPtr: Long, numThreads: Int, audioData: FloatArray)
+        external fun fullTranscribe(
+            contextPtr: Long,
+            numThreads: Int,
+            audioData: FloatArray,
+            lang: String
+        )
+
         external fun getTextSegmentCount(contextPtr: Long): Int
         external fun getTextSegment(contextPtr: Long, index: Int): String
         external fun getSystemInfo(): String

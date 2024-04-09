@@ -99,7 +99,7 @@ Java_com_whispercppdemo_whisper_WhisperLib_00024Companion_initContextFromInputSt
 
     context = whisper_init(&loader);
     return (jlong)
-    context;
+            context;
 }
 
 static size_t asset_read(void *ctx, void *output, size_t read_size) {
@@ -148,7 +148,7 @@ Java_com_whispercpp_whisper_WhisperLib_00024Companion_initContextFromAsset(
     context = whisper_init_from_asset(env, assetManager, asset_path_chars);
     (*env)->ReleaseStringUTFChars(env, asset_path_str, asset_path_chars);
     return (jlong)
-    context;
+            context;
 }
 
 JNIEXPORT jlong
@@ -163,70 +163,80 @@ Java_com_whispercpp_whisper_WhisperLib_00024Companion_initContext(
                                                  whisper_context_default_params());
     (*env)->ReleaseStringUTFChars(env, model_path_str, model_path_chars);
     return (jlong)
-    context;
+            context;
 }
 
 JNIEXPORT void JNICALL
 Java_com_whispercpp_whisper_WhisperLib_00024Companion_freeContext(
         JNIEnv
-*env,
-jobject thiz, jlong
-context_ptr) {
-UNUSED(env);
-UNUSED(thiz);
-struct whisper_context *context = (struct whisper_context *) context_ptr;
-whisper_free(context);
+        *env,
+        jobject thiz, jlong
+        context_ptr) {
+    UNUSED(env);
+    UNUSED(thiz);
+    struct whisper_context *context = (struct whisper_context *) context_ptr;
+    whisper_free(context);
 }
 
 JNIEXPORT void JNICALL
 Java_com_whispercpp_whisper_WhisperLib_00024Companion_fullTranscribe(
         JNIEnv
-*env,
-jobject thiz, jlong
-context_ptr,
-jint num_threads, jfloatArray
-audio_data) {
-UNUSED(thiz);
-struct whisper_context *context = (struct whisper_context *) context_ptr;
-jfloat *audio_data_arr = (*env)->GetFloatArrayElements(env, audio_data, NULL);
-const jsize audio_data_length = (*env)->GetArrayLength(env, audio_data);
+        *env,
+        jobject thiz, jlong
+        context_ptr,
+        jint num_threads, jfloatArray
+        audio_data,
+        jstring
+        lang) {
+    UNUSED(thiz);
+    struct whisper_context *context = (struct whisper_context *) context_ptr;
+    jfloat *audio_data_arr = (*env)->GetFloatArrayElements(env, audio_data, NULL);
+    const jsize audio_data_length = (*env)->GetArrayLength(env, audio_data);
 
 // The below adapted from the Objective-C iOS sample
-struct whisper_full_params params = whisper_full_default_params(WHISPER_SAMPLING_GREEDY);
-params.
-print_realtime = true;
-params.
-print_progress = false;
-params.
-print_timestamps = true;
-params.
-print_special = false;
+    struct whisper_full_params params = whisper_full_default_params(WHISPER_SAMPLING_GREEDY);
+    params.
+            print_realtime = true;
+    params.
+            print_progress = false;
+    params.
+            print_timestamps = true;
+    params.
+            print_special = false;
     params.
             translate = false;
+
+    // Parse language string
     params.
-            language = "sl";
+            language = (*env)->GetStringUTFChars(env, lang, NULL);
+    if (params.language == NULL) {
+        params.language = "en";
+    }
     params.
             n_threads = num_threads;
-params.
-offset_ms = 0;
-params.
-no_context = true;
-params.
-single_segment = false;
+    params.
+            offset_ms = 0;
+    params.
+            no_context = true;
+    params.
+            single_segment = false;
 
-whisper_reset_timings(context);
+    whisper_reset_timings(context);
 
-LOGI("About to run whisper_full");
-if (
-whisper_full(context, params, audio_data_arr, audio_data_length
-) != 0) {
-LOGI("Failed to run the model");
-} else {
-whisper_print_timings(context);
-}
-(*env)->
-ReleaseFloatArrayElements(env, audio_data, audio_data_arr, JNI_ABORT
-);
+    LOGI("About to run whisper_full");
+    if (
+            whisper_full(context, params, audio_data_arr, audio_data_length
+            ) != 0) {
+        LOGI("Failed to run the model");
+    } else {
+        whisper_print_timings(context);
+    }
+    (*env)->
+            ReleaseFloatArrayElements(env, audio_data, audio_data_arr, JNI_ABORT
+    );
+    (*env)->
+            ReleaseStringUTFChars(env, lang, params.language
+    );
 }
 
 JNIEXPORT jint

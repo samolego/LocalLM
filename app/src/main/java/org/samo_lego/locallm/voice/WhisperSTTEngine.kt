@@ -105,7 +105,7 @@ class WhisperSTTEngine(assets: AssetManager) : STTEngine {
             Log.d(LOG_TAG, "${data.size / (16_000 / 1000)} ms\n")
             Log.d(LOG_TAG, "Transcribing data...\n")
             val start = System.currentTimeMillis()
-            text = whisperContext?.transcribeData(data)
+            text = whisperContext?.transcribeData(data, lang = "sl")
             val elapsed = System.currentTimeMillis() - start
 
             Log.d(LOG_TAG, "Done ($elapsed ms): $text\n")
