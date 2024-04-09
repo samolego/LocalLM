@@ -156,7 +156,6 @@ fun MicInput(speechToText: STTEngine, onComplete: (String) -> Unit = {}) {
                         isRecognizing = false
                     },
                     onRmsChanged = {
-                        println(it)
                         rms = 0.25f * rms + 0.75f * sqrt(abs(it))
                     }
                 )

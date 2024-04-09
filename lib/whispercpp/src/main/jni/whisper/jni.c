@@ -201,12 +201,12 @@ params.
 print_timestamps = true;
 params.
 print_special = false;
-params.
-translate = false;
-params.
-language = "en";
-params.
-n_threads = num_threads;
+    params.
+            translate = false;
+    params.
+            language = "sl";
+    params.
+            n_threads = num_threads;
 params.
 offset_ms = 0;
 params.
