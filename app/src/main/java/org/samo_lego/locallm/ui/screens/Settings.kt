@@ -32,7 +32,10 @@ import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import org.samo_lego.locallm.data.AvailableModels
 import org.samo_lego.locallm.data.LMProperties
+import org.samo_lego.locallm.data.SettingsKeys
+import org.samo_lego.locallm.data.appSettings
 import org.samo_lego.locallm.lmloader.LMHolder
+import org.samo_lego.locallm.ui.components.settings.Dropdown
 import org.samo_lego.locallm.ui.components.settings.ModelCard
 import org.samo_lego.locallm.ui.components.settings.ModelChooser
 import org.samo_lego.locallm.ui.components.settings.ModelCopyDialog
@@ -56,6 +59,10 @@ fun Settings(navController: NavHostController?) {
                 modelPath = ""
             )
         )
+    }
+
+    var lang by remember {
+        mutableStateOf(appSettings.getString(SettingsKeys.WHISPER_LANGUAGE, "sl"))
     }
 
 
@@ -140,6 +147,17 @@ fun Settings(navController: NavHostController?) {
                 onChoose = { properties ->
                     modelProperties = properties
                     LMHolder.setModel(properties)
+                }
+            )
+
+
+            Dropdown(
+                title = "Whisper langauge",
+                choices = arrayOf("en", "sl", "auto"),
+                selectedItem = lang,
+                onChoose = { newLang ->
+                    lang = newLang
+                    appSettings.setString(SettingsKeys.WHISPER_LANGUAGE, newLang)
                 }
             )
         }

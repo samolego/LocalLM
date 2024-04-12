@@ -170,6 +170,32 @@ fun ModelPathChooser(path: MutableState<String>, onChoose: (Uri?) -> Unit) {
 
 @Composable
 fun ModelChooser(selectedItem: String?, onChoose: (LMProperties) -> Unit) {
+    Dropdown(
+        title = "Current model",
+        choices = AvailableModels.instance.models().toTypedArray(),
+        choice2str = { it.name },
+        enableAdd = true,
+        selectedItem = selectedItem,
+        onChoose = onChoose
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ModelChooserPreview() {
+    ModelChooser("Test") {}
+}
+
+
+@Composable
+fun <T> Dropdown(
+    title: String,
+    choices: Array<T>,
+    choice2str: (T) -> String = { it.toString() },
+    selectedItem: String?,
+    enableAdd: Boolean = false,
+    onChoose: (T) -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
 
     Row(
@@ -179,7 +205,7 @@ fun ModelChooser(selectedItem: String?, onChoose: (LMProperties) -> Unit) {
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Column {
-            Text(text = "Current model", fontWeight = FontWeight.Bold)
+            Text(text = title, fontWeight = FontWeight.Bold)
         }
         Column {
             Surface(
@@ -217,7 +243,7 @@ fun ModelChooser(selectedItem: String?, onChoose: (LMProperties) -> Unit) {
                                 expanded = false
                             },
                         ) {
-                            AvailableModels.instance.models().forEachIndexed { index, properties ->
+                            choices.forEachIndexed { index, choice ->
                                 val top = if (index == 0) {
                                     8.dp
                                 } else {
@@ -235,36 +261,38 @@ fun ModelChooser(selectedItem: String?, onChoose: (LMProperties) -> Unit) {
                                             .background(MaterialTheme.colorScheme.primaryContainer),
                                         text = {
                                             Text(
-                                                text = properties.name,
+                                                text = choice2str(choice),
                                                 style = MaterialTheme.typography.bodyMedium
                                             )
                                         },
                                         onClick = {
-                                            onChoose(properties)
+                                            onChoose(choice)
                                             expanded = false
                                         }
                                     )
                                 }
                             }
-                            Surface(
-                                shape = RoundedCornerShape(
-                                    bottomStart = 8.dp,
-                                    bottomEnd = 8.dp,
-                                )
-                            ) {
-                                DropdownMenuItem(
-                                    modifier = Modifier
-                                        .background(MaterialTheme.colorScheme.primaryContainer),
-                                    text = {
-                                        Text(
-                                            text = "Add new",
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                    },
-                                    onClick = {
-                                        expanded = false
-                                    }
-                                )
+                            if (enableAdd) {
+                                Surface(
+                                    shape = RoundedCornerShape(
+                                        bottomStart = 8.dp,
+                                        bottomEnd = 8.dp,
+                                    )
+                                ) {
+                                    DropdownMenuItem(
+                                        modifier = Modifier
+                                            .background(MaterialTheme.colorScheme.primaryContainer),
+                                        text = {
+                                            Text(
+                                                text = "Add new",
+                                                style = MaterialTheme.typography.bodyMedium
+                                            )
+                                        },
+                                        onClick = {
+                                            expanded = false
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -272,10 +300,4 @@ fun ModelChooser(selectedItem: String?, onChoose: (LMProperties) -> Unit) {
             }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ModelChooserPreview() {
-    ModelChooser("Test") {}
 }

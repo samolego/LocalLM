@@ -51,6 +51,7 @@ class AppSettings(private val sharedPreferences: SharedPreferences) {
 
 enum class SettingsKeys(val key: String) {
     USE_TTS("useTTS"),
+    WHISPER_LANGUAGE("whisperLanguage"),
     CLOUD_STT("cloudSTT"),
     AUTO_SEND("autoSendAfterRecognition"),
     LAST_MODEL("lastModel");
