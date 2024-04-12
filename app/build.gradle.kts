@@ -49,7 +49,7 @@ android {
                 arguments += "-DCMAKE_BUILD_TYPE=Release"
                 //arguments += "-DCMAKE_VERBOSE_MAKEFILE=ON"
                 //arguments += "-DLLAMA_CLBLAST=ON"  // Enable CLBlast
-                //arguments += "-DCLBlast_DIR=$libs/clblast"  // Enable CLBlast
+                //arguments += "-DCLBlast_DIR=${project.property("CLBLAST_HOME")}"  // Enable CLBlast
                 //arguments += "-DLLAMA_BLAS=ON"  // Enable BLAS
                 //arguments += "-DLLAMA_BLAS_VENDOR=\"OpenBLAS\""  // Use OpenBLAS
                 //arguments += "-DBLAS_INCLUDE_DIRS=$libs/openblas"
@@ -133,17 +133,18 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     // Icons
-    implementation("androidx.compose.material:material-icons-extended:1.6.4")
+    implementation("androidx.compose.material:material-icons-extended:1.6.5")
 
     // For markdown support
     implementation("com.halilibo.compose-richtext:richtext-commonmark:0.20.0")
     implementation("com.halilibo.compose-richtext:richtext-ui-material3:0.20.0")
 
     // Fix issue with loading indicators crashing app
-    implementation("androidx.compose.animation:animation:1.6.4")
+    implementation("androidx.compose.animation:animation:1.6.5")
 
     // Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
+    implementation(project(":lib:llamacpp"))
     implementation(project(":lib:whispercpp"))
 }

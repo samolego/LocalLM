@@ -18,7 +18,6 @@ android {
         }
         externalNativeBuild {
             cmake {
-                arguments += "-DCMAKE_BUILD_TYPE=Release"
                 // When set, builds whisper.android against the version located
                 // at GGML_HOME instead of the copy bundled with whisper.cpp.
                 if (
@@ -27,6 +26,7 @@ android {
                 ) {
                     // Turning on CLBlast requires GGML_HOME
                     arguments "-DGGML_HOME=${project.property('GGML_HOME')}",
+                            //"-DCLBLAST_LIB=${project.property('CLBLAST_LIB')}",
                             "-DGGML_CLBLAST=ON",
                             "-DOPENCL_LIB=${project.property('OPENCL_LIB')}",
                             "-DCLBLAST_HOME=${project.property('CLBLAST_HOME')}",
@@ -38,7 +38,7 @@ android {
                     arguments "-DGGML_HOME=${project.property('GGML_HOME')}"/*,
                             "-DCMAKE_BUILD_TYPE=Release"*/
                 }
-
+                arguments += "-DCMAKE_BUILD_TYPE=Release"
             }
         }
     }
@@ -56,7 +56,8 @@ android {
         jvmTarget = '1.8'
     }
 
-    //ndkVersion "25.2.9519653"
+    ndkVersion = "26.1.10909125"
+
     externalNativeBuild {
         cmake {
             path = file("src/main/jni/whisper/CMakeLists.txt")

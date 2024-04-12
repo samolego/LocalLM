@@ -6,7 +6,6 @@ import de.kherud.llama.LlamaModel
 import de.kherud.llama.LogLevel
 import de.kherud.llama.ModelParameters
 import org.samo_lego.locallm.data.LMProperties
-import org.samo_lego.locallm.util.processUserText
 
 class LoadedModel(
     var properties: LMProperties,
@@ -25,10 +24,7 @@ class LoadedModel(
         onEnd: () -> Unit = {},
         inferParams: InferenceParameters = InferenceParameters(),
     ) {
-        // Pre-process user text
-        val procText = processUserText(text, properties)
-
-        for (suggestion in model.generate(procText, inferParams)) {
+        for (suggestion in model.generate(text, inferParams)) {
             if (!onSuggestion(suggestion.toString())) {
                 break
             }

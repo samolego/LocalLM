@@ -1,11 +1,38 @@
 package org.samo_lego.locallm.util
 
+import org.samo_lego.locallm.data.LMProperties
+
 
 class ChatMLUtil {
     companion object {
         const val im_end = "<|im_end|>"
-        fun toChatML(systemPrompt: String, userPrompt: String) =
-            "<|im_start|>system\n$systemPrompt$im_end\n<|im_start|>user\n$userPrompt$im_end\n<|im_start|>assistant\n"
+        const val im_start = "<|im_start|>"
+
+        fun processUserText(text: String, properties: LMProperties): String {
+            // Apply ChatML to text if needed
+            if (properties.useChatML) {
+                return toChatML(properties.systemPrompt, text)
+            }
+
+            return text
+        }
+
+        fun format(properties: LMProperties, userMessages: List<String>, assistantMessages: List<String>): String {
+            val sb = StringBuilder()
+            sb.append("${im_start}system\n${properties.systemPrompt}$im_end\n")
+            for (i in userMessages.indices) {
+                sb.append("${im_start}user\n${userMessages[i]}$im_end\n")
+                sb.append("${im_start}assistant\n${assistantMessages[i]}$im_end\n")
+            }
+            return sb.toString()
+        }
+
+        fun addUserMessage(conversation: String, message: String): String {
+            return "$conversation${im_start}user\n$message$im_end\n"
+        }
+
+        private fun toChatML(systemPrompt: String, userPrompt: String) =
+            "${im_start}system\n$systemPrompt$im_end\n${im_start}user\n$userPrompt$im_end\n${im_start}assistant\n"
 
         /**
          * Checks whether sentence has potential chatml ending.

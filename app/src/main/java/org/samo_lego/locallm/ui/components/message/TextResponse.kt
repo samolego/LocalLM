@@ -25,7 +25,7 @@ class BotMessage : TextResponse {
     val tokens = mutableStateOf("")
     private var savedTokens = ""
 
-    fun removeRange(start: Int, end: Int) {
+    private fun removeRange(start: Int, end: Int) {
         tokens.value = tokens.value.removeRange(start, end)
     }
 

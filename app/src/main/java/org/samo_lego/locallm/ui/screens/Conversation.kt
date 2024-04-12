@@ -29,14 +29,45 @@ import org.samo_lego.locallm.ui.components.Input
 import org.samo_lego.locallm.ui.components.message.BotMessage
 import org.samo_lego.locallm.ui.components.message.TextResponse
 import org.samo_lego.locallm.ui.components.message.UserMessage
+import org.samo_lego.locallm.util.ChatMLUtil
 import org.samo_lego.locallm.voice.tts
 
 private val messages: MutableList<TextResponse> = mutableStateListOf()
+
+private suspend fun getContext(): String {
+    val userMessages = mutableStateListOf<String>()
+    val botMessages = mutableStateListOf<String>()
+
+    messages.forEach {
+        when (it) {
+            is UserMessage -> userMessages.add(it.message)
+            is BotMessage -> botMessages.add(it.tokens.value)
+        }
+    }
+
+    // Include last n messages
+    val contextSize = appSettings.getInt(SettingsKeys.CONTEXT_SIZE, 5)
+    val userCut = if (userMessages.size > contextSize) {
+        userMessages.subList(userMessages.size - contextSize, userMessages.size)
+    } else {
+        userMessages
+    }
+
+    // userMessages.size is used with purpose, since botMessages can have more messages
+    val botCut = if (userMessages.size > contextSize) {
+        botMessages.subList(userMessages.size - contextSize, botMessages.size)
+    } else {
+        botMessages
+    }
+
+    return ChatMLUtil.format(LMHolder.currentModel()!!.properties, userCut, botCut)
+}
 
 @Preview(showBackground = true)
 @Composable
 fun Conversation() {
     val ttScope = rememberCoroutineScope()
+    val contextScope = rememberCoroutineScope()
     var backticks = 0
     val keyboardController = LocalSoftwareKeyboardController.current
     val scrollState = rememberLazyListState()
@@ -84,66 +115,71 @@ fun Conversation() {
                             // Double each \n for markdown
                             val text = txt.replace("\n", "\n\n")
 
+                            // Get context
+                            contextScope.launch {
+                                val context = getContext()
+                                ChatMLUtil.addUserMessage(context, text)
 
-                            // Add new text response to view
-                            messages.add(UserMessage(text))
+                                // Add new text response to view
+                                messages.add(UserMessage(text))
 
-                            // Create new bot response
-                            botResponse = BotMessage()
-                            messages.add(botResponse)
+                                // Create new bot response
+                                botResponse = BotMessage()
+                                messages.add(botResponse)
 
-                            // Run model to generate response
-                            tts.reset()
-                            allowGenerating = true
-                            LMHolder.suggest(text, onSuggestion = { suggestion ->
-                                if (!allowGenerating) {
-                                    return@suggest false
-                                }
-                                Log.v("LocalLM", "Suggestion: $suggestion")
-                                if (suggestion.isEmpty()) {
-                                    onEndSuggestions(
-                                        botResponse,
-                                        ttScope
-                                    )
-                                    allowGenerating = false
-
-                                    return@suggest false
-                                } else {
-                                    botResponse.appendToken(suggestion)
-
-                                    if (botResponse.isComplete()) {
+                                // Run model to generate response
+                                tts.reset()
+                                allowGenerating = true
+                                LMHolder.suggest(text, onSuggestion = { suggestion ->
+                                    if (!allowGenerating) {
+                                        return@suggest false
+                                    }
+                                    Log.v("LocalLM", "Suggestion: $suggestion")
+                                    if (suggestion.isEmpty()) {
                                         onEndSuggestions(
                                             botResponse,
                                             ttScope
                                         )
                                         allowGenerating = false
+
                                         return@suggest false
+                                    } else {
+                                        botResponse.appendToken(suggestion)
+
+                                        if (botResponse.isComplete()) {
+                                            onEndSuggestions(
+                                                botResponse,
+                                                ttScope
+                                            )
+                                            allowGenerating = false
+                                            return@suggest false
+                                        }
+
+                                        backticks += suggestion.count { it == '`' }
+
+                                        if (botResponse.tokens.value.endsWith("\n\n") && backticks % 2 == 0) {
+                                            // New bot message bubble
+                                            botResponse = BotMessage()
+                                            messages.add(botResponse)
+                                        }
+
+                                        if (appSettings.getBool(SettingsKeys.USE_TTS, true)) {
+                                            tts.addWord(ttScope, suggestion)
+                                        }
+
+                                        // Scroll to bottom
+                                        ttScope.launch {
+                                            scrollState.animateScrollToItem(messages.size - 1)
+                                        }
                                     }
 
-                                    backticks += suggestion.count { it == '`' }
-
-                                    if (botResponse.tokens.value.endsWith("\n\n") && backticks % 2 == 0) {
-                                        // New bot message bubble
-                                        botResponse = BotMessage()
-                                        messages.add(botResponse)
-                                    }
-
-                                    if (appSettings.getBool(SettingsKeys.USE_TTS, true)) {
-                                        tts.addWord(ttScope, suggestion)
-                                    }
-
-                                    // Scroll to bottom
-                                    ttScope.launch {
-                                        scrollState.animateScrollToItem(messages.size - 1)
-                                    }
-                                }
-
-                                return@suggest true
-                            },
-                                onEnd = {
-                                    onEndSuggestions(botResponse, ttScope)
-                                    allowGenerating = false
-                                })
+                                    return@suggest true
+                                },
+                                    onEnd = {
+                                        onEndSuggestions(botResponse, ttScope)
+                                        allowGenerating = false
+                                    })
+                            }
                         }
                     },
                     onForceStopGeneration = {
@@ -151,6 +187,7 @@ fun Conversation() {
                         tts.reset()
                         botResponse.appendToken(" ... [-- Stopped --]")
                     }
+
                 )
             }
         }

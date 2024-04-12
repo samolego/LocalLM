@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
-
 package org.samo_lego.locallm.ui.screens
 
 import android.content.Context
@@ -63,6 +61,11 @@ fun Settings(navController: NavHostController?) {
 
     var lang by remember {
         mutableStateOf(appSettings.getString(SettingsKeys.WHISPER_LANGUAGE, "sl"))
+    }
+
+
+    var contextSize by remember {
+        mutableStateOf(appSettings.getInt(SettingsKeys.CONTEXT_SIZE, 5))
     }
 
 
@@ -160,6 +163,17 @@ fun Settings(navController: NavHostController?) {
                     appSettings.setString(SettingsKeys.WHISPER_LANGUAGE, newLang)
                 }
             )
+
+            // todo
+            /*OutlinedTextField(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                value = TextFieldValue(contextSize),
+                onValueChange = { value: Int ->
+                    contextSize = value
+                    appSettings.setInt(SettingsKeys.CONTEXT_SIZE, value)
+                },
+            )*/
         }
     }
 }

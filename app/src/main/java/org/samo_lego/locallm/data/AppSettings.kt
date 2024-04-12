@@ -54,7 +54,8 @@ enum class SettingsKeys(val key: String) {
     WHISPER_LANGUAGE("whisperLanguage"),
     CLOUD_STT("cloudSTT"),
     AUTO_SEND("autoSendAfterRecognition"),
-    LAST_MODEL("lastModel");
+    LAST_MODEL("lastModel"),
+    CONTEXT_SIZE("contextSize");
 
     override fun toString(): String {
         return key
