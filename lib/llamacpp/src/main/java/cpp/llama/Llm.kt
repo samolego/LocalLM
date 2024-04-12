@@ -23,10 +23,10 @@ class Llm {
             System.loadLibrary("llama-android")
 
             // Set llama log handler to Android
-            log_to_android()
-            backend_init(false)
+            logToAndroid()
+            backendInit(false)
 
-            Log.d(tag, system_info())
+            Log.d(tag, systemInfo())
 
             it.run()
         }.apply {
@@ -38,16 +38,16 @@ class Llm {
 
     private val nlen: Int = 64
 
-    private external fun log_to_android()
-    private external fun load_model(filename: String): Long
-    private external fun free_model(model: Long)
-    private external fun new_context(model: Long): Long
-    private external fun free_context(context: Long)
-    private external fun backend_init(numa: Boolean)
-    private external fun backend_free()
-    private external fun free_batch(batch: Long)
-    private external fun new_batch(nTokens: Int, embd: Int, nSeqMax: Int): Long
-    private external fun bench_model(
+    private external fun logToAndroid()
+    private external fun loadModel(filename: String): Long
+    private external fun freeModel(model: Long)
+    private external fun newContext(model: Long): Long
+    private external fun freeContext(context: Long)
+    private external fun backendInit(numa: Boolean)
+    private external fun backendFree()
+    private external fun freeBatch(batch: Long)
+    private external fun newBatch(nTokens: Int, embd: Int, nSeqMax: Int): Long
+    private external fun benchModel(
         context: Long,
         model: Long,
         batch: Long,
@@ -57,30 +57,30 @@ class Llm {
         nr: Int
     ): String
 
-    private external fun system_info(): String
+    private external fun systemInfo(): String
 
-    private external fun completion_init(
+    private external fun completionInit(
         context: Long,
         batch: Long,
         text: String,
         nLen: Int
     ): Int
 
-    private external fun completion_loop(
+    private external fun completionLoop(
         context: Long,
         batch: Long,
         nLen: Int,
         ncur: IntVar
     ): String?
 
-    private external fun kv_cache_clear(context: Long)
+    private external fun kvCacheClear(context: Long)
 
     suspend fun bench(pp: Int, tg: Int, pl: Int, nr: Int = 1): String {
         return withContext(runLoop) {
             when (val state = threadLocalState.get()) {
                 is State.Loaded -> {
                     Log.d(tag, "bench(): $state")
-                    bench_model(state.context, state.model, state.batch, pp, tg, pl, nr)
+                    benchModel(state.context, state.model, state.batch, pp, tg, pl, nr)
                 }
 
                 else -> throw IllegalStateException("No model loaded")
@@ -92,13 +92,13 @@ class Llm {
         withContext(runLoop) {
             when (threadLocalState.get()) {
                 is State.Idle -> {
-                    val model = load_model(pathToModel)
+                    val model = loadModel(pathToModel)
                     if (model == 0L)  throw IllegalStateException("load_model() failed")
 
-                    val context = new_context(model)
+                    val context = newContext(model)
                     if (context == 0L) throw IllegalStateException("new_context() failed")
 
-                    val batch = new_batch(512, 0, 1)
+                    val batch = newBatch(512, 0, 1)
                     if (batch == 0L) throw IllegalStateException("new_batch() failed")
 
                     Log.i(tag, "Loaded model $pathToModel")
@@ -112,12 +112,12 @@ class Llm {
     fun send(message: String): Flow<String> = flow {
         when (val state = threadLocalState.get()) {
             is State.Loaded -> {
-                val ncur = IntVar(completion_init(state.context, state.batch, message, nlen))
+                val ncur = IntVar(completionInit(state.context, state.batch, message, nlen))
                 while (ncur.value <= nlen) {
-                    val str = completion_loop(state.context, state.batch, nlen, ncur) ?: break
+                    val str = completionLoop(state.context, state.batch, nlen, ncur) ?: break
                     emit(str)
                 }
-                kv_cache_clear(state.context)
+                kvCacheClear(state.context)
             }
             else -> {}
         }
@@ -132,9 +132,9 @@ class Llm {
         withContext(runLoop) {
             when (val state = threadLocalState.get()) {
                 is State.Loaded -> {
-                    free_context(state.context)
-                    free_model(state.model)
-                    free_batch(state.batch)
+                    freeContext(state.context)
+                    freeModel(state.model)
+                    freeBatch(state.batch)
 
                     threadLocalState.set(State.Idle)
                 }
