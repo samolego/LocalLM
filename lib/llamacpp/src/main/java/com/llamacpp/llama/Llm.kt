@@ -1,4 +1,4 @@
-package com.llamacpp.llamma
+package com.llamacpp.llama
 
 import android.util.Log
 import kotlinx.coroutines.CoroutineDispatcher
@@ -10,7 +10,7 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
 import kotlin.concurrent.thread
 
-class LibLlm {
+class Llm {
 
     private val tag: String? = this::class.simpleName
 
@@ -163,8 +163,8 @@ class LibLlm {
         }
 
         // Enforce only one instance of Llm.
-        private val _instance: LibLlm = LibLlm()
+        private val _instance: Llm = Llm()
 
-        fun instance(): LibLlm = _instance
+        fun instance(): Llm = _instance
     }
 }
