@@ -9,11 +9,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.SaveAs
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,9 +32,11 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,8 +53,10 @@ import org.samo_lego.locallm.data.SettingsKeys
 import org.samo_lego.locallm.data.appSettings
 import org.samo_lego.locallm.lmloader.LMHolder
 import org.samo_lego.locallm.ui.components.AppDrawer
+import org.samo_lego.locallm.ui.components.message.TextResponse
 import org.samo_lego.locallm.ui.navigation.Routes
 import org.samo_lego.locallm.ui.navigation.navigate
+import org.samo_lego.locallm.util.ChatMLUtil
 
 
 const val appTitle = "LocalLM"
@@ -68,9 +76,20 @@ fun AppView() {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val navController = rememberNavController()
+    var moreOptionsExpanded by remember { mutableStateOf(false) }
 
     val modelLoaded by remember { modelLoadedState }
     val modelAvailable by remember { modelAvailableState }
+
+    val currentConversation = remember { mutableStateOf("") }
+    val messages = remember {
+        val context = TextResponse.fromText(currentConversation.value, ChatMLUtil.im_start)
+        mutableStateListOf<TextResponse>().apply {
+            for (msg in context) {
+                add(msg)
+            }
+        }
+    }
 
 
     // Set up model in the background
@@ -133,10 +152,71 @@ fun AppView() {
                                 }
                             },
                             actions = {
-                                IconButton(onClick = { /* do something */ }) {
+                                IconButton(onClick = {
+                                    // Show more options
+                                    moreOptionsExpanded = !moreOptionsExpanded
+
+                                }) {
                                     Icon(
                                         imageVector = Icons.Filled.MoreVert,
                                         contentDescription = "Localized description"
+                                    )
+                                }
+
+                                DropdownMenu(
+                                    expanded = moreOptionsExpanded,
+                                    onDismissRequest = { moreOptionsExpanded = false },
+                                ) {
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                Column(
+                                                    horizontalAlignment = Alignment.Start,
+                                                ) {
+                                                    Text("Save")
+                                                }
+                                                Column(
+                                                    horizontalAlignment = Alignment.End,
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.SaveAs,
+                                                        contentDescription = "Save",
+                                                    )
+                                                }
+                                            }
+                                        },
+                                        onClick = {
+                                            moreOptionsExpanded = false
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                Column(
+                                                    horizontalAlignment = Alignment.Start,
+                                                ) {
+                                                    Text("Clear")
+                                                }
+                                                Column(
+                                                    horizontalAlignment = Alignment.End,
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Clear,
+                                                        contentDescription = "Clear",
+                                                    )
+                                                }
+                                            }
+                                        },
+                                        onClick = {
+                                            moreOptionsExpanded = false
+
+                                            messages.clear()
+                                            currentConversation.value = ""
+                                        },
                                     )
                                 }
                             },
@@ -151,16 +231,9 @@ fun AppView() {
                             horizontalAlignment = Alignment.End,
                             verticalArrangement = Arrangement.Center,
                         ) {
-                            val conversation = StringBuilder()
-                            conversation.append("<|im_start|>system\n")
-                            conversation.append("You are a friendly tech assistant, who likes to help.<|im_end|>")
-                            conversation.append("<|im_start|>user\n")
-                            conversation.append("Hello, how are you doing?<|im_end|>")
-                            conversation.append("<|im_start|>assistant\n")
-                            conversation.append("I'm doing great, how can I help you today?<|im_end|>")
-
                             Conversation(
-                                conversation = conversation.toString(),
+                                messages = messages,
+                                conversation = currentConversation,
                             )
                         }
                     } else {

@@ -10,16 +10,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -33,12 +33,13 @@ import org.samo_lego.locallm.ui.components.message.TextResponse
 import org.samo_lego.locallm.ui.components.message.UserMessage
 import org.samo_lego.locallm.util.ChatMLUtil
 import org.samo_lego.locallm.voice.tts
+import kotlin.math.max
 
 
-@Preview(showBackground = true)
 @Composable
 fun Conversation(
-    conversation: String = "",
+    conversation: MutableState<String>,
+    messages: SnapshotStateList<TextResponse>,
 ) {
     val ttScope = rememberCoroutineScope()
     val contextScope = rememberCoroutineScope()
@@ -51,20 +52,10 @@ fun Conversation(
         mutableStateOf(BotMessage())
     }
 
-    val messages = remember {
-        val context = TextResponse.fromText(conversation, ChatMLUtil.im_start)
-        mutableStateListOf<TextResponse>().apply {
-            for (msg in context) {
-                add(msg)
-            }
-        }
-    }
-
     LaunchedEffect(messages.size) {
-        scrollState.animateScrollToItem(messages.size - 1)
+        scrollState.animateScrollToItem(max(messages.size - 1, 0))
     }
 
-    val currentConversation = remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -115,7 +106,7 @@ fun Conversation(
                                         ChatMLUtil.toChatML(defaultSystem, text)
                                     }
                                 } else {
-                                    ChatMLUtil.addUserMessage(currentConversation.value, text)
+                                    ChatMLUtil.addUserMessage(conversation.value, text)
                                 }
 
                                 // Add new text response to view
@@ -143,7 +134,7 @@ fun Conversation(
 
                                         return@suggest false
                                     } else {
-                                            currentConversation.value += suggestion
+                                            conversation.value += suggestion
                                             botResponse.appendToken(suggestion)
 
                                         if (botResponse.isComplete()) {
