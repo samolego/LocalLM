@@ -28,7 +28,7 @@ class ChatMLUtil {
         }
 
         fun addUserMessage(conversation: String, message: String): String {
-            return "$conversation${im_start}user\n$message$im_end\n"
+            return "$conversation\n${im_start}user\n$message$im_end\n${im_start}assistant\n"
         }
 
         private fun toChatML(systemPrompt: String, userPrompt: String) =

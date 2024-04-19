@@ -33,34 +33,10 @@ import org.samo_lego.locallm.util.ChatMLUtil
 import org.samo_lego.locallm.voice.tts
 
 private val messages: MutableList<TextResponse> = mutableStateListOf()
+private val currentConversation: StringBuilder = StringBuilder()
 
-private suspend fun getContext(): String {
-    val userMessages = mutableStateListOf<String>()
-    val botMessages = mutableStateListOf<String>()
-
-    messages.forEach {
-        when (it) {
-            is UserMessage -> userMessages.add(it.message)
-            is BotMessage -> botMessages.add(it.tokens.value)
-        }
-    }
-
-    // Include last n messages
-    val contextSize = appSettings.getInt(SettingsKeys.CONTEXT_SIZE, 5)
-    val userCut = if (userMessages.size > contextSize) {
-        userMessages.subList(userMessages.size - contextSize, userMessages.size)
-    } else {
-        userMessages
-    }
-
-    // userMessages.size is used with purpose, since botMessages can have more messages
-    val botCut = if (userMessages.size > contextSize) {
-        botMessages.subList(userMessages.size - contextSize, botMessages.size)
-    } else {
-        botMessages
-    }
-
-    return ChatMLUtil.format(LMHolder.currentModel()!!.properties, userCut, botCut)
+private fun getContext(): String {
+    return currentConversation.toString()
 }
 
 @Preview(showBackground = true)
@@ -117,8 +93,7 @@ fun Conversation() {
 
                             // Get context
                             contextScope.launch {
-                                val context = getContext()
-                                ChatMLUtil.addUserMessage(context, text)
+                                val context = ChatMLUtil.addUserMessage(getContext(), text)
 
                                 // Add new text response to view
                                 messages.add(UserMessage(text))
@@ -130,21 +105,23 @@ fun Conversation() {
                                 // Run model to generate response
                                 tts.reset()
                                 allowGenerating = true
-                                LMHolder.suggest(text, onSuggestion = { suggestion ->
-                                    if (!allowGenerating) {
-                                        return@suggest false
-                                    }
-                                    Log.v("LocalLM", "Suggestion: $suggestion")
-                                    if (suggestion.isEmpty()) {
-                                        onEndSuggestions(
-                                            botResponse,
-                                            ttScope
-                                        )
-                                        allowGenerating = false
+                                LMHolder.suggest(
+                                    context, onSuggestion = { suggestion ->
+                                        if (!allowGenerating) {
+                                            return@suggest false
+                                        }
+                                        Log.v("LocalLM", "Suggestion: $suggestion")
+                                        if (suggestion.isEmpty()) {
+                                            onEndSuggestions(
+                                                botResponse,
+                                                ttScope
+                                            )
+                                            allowGenerating = false
 
                                         return@suggest false
                                     } else {
-                                        botResponse.appendToken(suggestion)
+                                            currentConversation.append(suggestion)
+                                            botResponse.appendToken(suggestion)
 
                                         if (botResponse.isComplete()) {
                                             onEndSuggestions(
