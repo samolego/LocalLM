@@ -11,6 +11,43 @@ interface TextResponse {
 
     @Composable
     fun Render()
+
+    companion object {
+        fun fromText(text: String, separator: String): MutableList<TextResponse> {
+            val responses = mutableListOf<TextResponse>()
+            // Cut out system prompt (till first user message)
+            val conversation = text.substringAfter(ChatMLUtil.im_end)
+            val messages = conversation.split(separator)
+            var isUser = true
+            for (message in messages) {
+                if (message.isEmpty()) continue
+                if (message.startsWith("user")) {
+                    isUser = true
+                } else if (message.startsWith("assistant")) {
+                    isUser = false
+                }
+                val cutMessage = message.removePrefix("user").removePrefix("assistant")
+
+                // Remove chatml suffix
+                val finalMsg = if (cutMessage.contains(ChatMLUtil.im_end)) {
+                    val end = cutMessage.indexOf(ChatMLUtil.im_end)
+                    cutMessage.slice(0 until end)
+                } else {
+                    cutMessage
+                }
+
+                responses.add(
+                    if (isUser) UserMessage(finalMsg)
+                    else BotMessage().apply {
+                        appendToken(finalMsg)
+                        complete()
+                    }
+                )
+            }
+
+            return responses
+        }
+    }
 }
 
 class UserMessage(val message: String) : TextResponse {

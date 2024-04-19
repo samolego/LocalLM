@@ -151,7 +151,17 @@ fun AppView() {
                             horizontalAlignment = Alignment.End,
                             verticalArrangement = Arrangement.Center,
                         ) {
-                            Conversation()
+                            val conversation = StringBuilder()
+                            conversation.append("<|im_start|>system\n")
+                            conversation.append("You are a friendly tech assistant, who likes to help.<|im_end|>")
+                            conversation.append("<|im_start|>user\n")
+                            conversation.append("Hello, how are you doing?<|im_end|>")
+                            conversation.append("<|im_start|>assistant\n")
+                            conversation.append("I'm doing great, how can I help you today?<|im_end|>")
+
+                            Conversation(
+                                conversation = conversation.toString(),
+                            )
                         }
                     } else {
                         Column(

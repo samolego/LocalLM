@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -24,6 +25,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.samo_lego.locallm.data.SettingsKeys
 import org.samo_lego.locallm.data.appSettings
+import org.samo_lego.locallm.data.defaultSystem
 import org.samo_lego.locallm.lmloader.LMHolder
 import org.samo_lego.locallm.ui.components.Input
 import org.samo_lego.locallm.ui.components.message.BotMessage
@@ -32,16 +34,12 @@ import org.samo_lego.locallm.ui.components.message.UserMessage
 import org.samo_lego.locallm.util.ChatMLUtil
 import org.samo_lego.locallm.voice.tts
 
-private val messages: MutableList<TextResponse> = mutableStateListOf()
-private val currentConversation: StringBuilder = StringBuilder()
-
-private fun getContext(): String {
-    return currentConversation.toString()
-}
 
 @Preview(showBackground = true)
 @Composable
-fun Conversation() {
+fun Conversation(
+    conversation: String = "",
+) {
     val ttScope = rememberCoroutineScope()
     val contextScope = rememberCoroutineScope()
     var backticks = 0
@@ -52,6 +50,21 @@ fun Conversation() {
     var botResponse by remember {
         mutableStateOf(BotMessage())
     }
+
+    val messages = remember {
+        val context = TextResponse.fromText(conversation, ChatMLUtil.im_start)
+        mutableStateListOf<TextResponse>().apply {
+            for (msg in context) {
+                add(msg)
+            }
+        }
+    }
+
+    LaunchedEffect(messages.size) {
+        scrollState.animateScrollToItem(messages.size - 1)
+    }
+
+    val currentConversation = remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -93,7 +106,17 @@ fun Conversation() {
 
                             // Get context
                             contextScope.launch {
-                                val context = ChatMLUtil.addUserMessage(getContext(), text)
+                                // Check if message is first
+                                val context = if (messages.isEmpty()) {
+                                    val current = LMHolder.currentModel()
+                                    if (current != null) {
+                                        ChatMLUtil.toChatML(current.properties.systemPrompt, text)
+                                    } else {
+                                        ChatMLUtil.toChatML(defaultSystem, text)
+                                    }
+                                } else {
+                                    ChatMLUtil.addUserMessage(conversation, text)
+                                }
 
                                 // Add new text response to view
                                 messages.add(UserMessage(text))
@@ -120,7 +143,7 @@ fun Conversation() {
 
                                         return@suggest false
                                     } else {
-                                            currentConversation.append(suggestion)
+                                            currentConversation.value += suggestion
                                             botResponse.appendToken(suggestion)
 
                                         if (botResponse.isComplete()) {

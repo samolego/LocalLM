@@ -31,7 +31,7 @@ class ChatMLUtil {
             return "$conversation\n${im_start}user\n$message$im_end\n${im_start}assistant\n"
         }
 
-        private fun toChatML(systemPrompt: String, userPrompt: String) =
+        fun toChatML(systemPrompt: String, userPrompt: String) =
             "${im_start}system\n$systemPrompt$im_end\n${im_start}user\n$userPrompt$im_end\n${im_start}assistant\n"
 
         /**
