@@ -19,7 +19,7 @@ class WhisperContext private constructor(private var ptr: Long) {
         Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     )
 
-    suspend fun transcribeData(data: FloatArray, lang: String = "en"): String =
+    suspend fun transcribeData(data: FloatArray, lang: String = "auto"): String =
         withContext(scope.coroutineContext) {
             require(ptr != 0L)
             val numThreads = WhisperCpuConfig.preferredThreadCount

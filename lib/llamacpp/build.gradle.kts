@@ -4,13 +4,13 @@ plugins {
 }
 
 android {
-    namespace = "cpp.llama"
+    namespace = "com.llamacpp.llama"
     compileSdk = 34
 
     ndkVersion = "26.1.10909125"
 
     defaultConfig {
-        applicationId = "cpp.llama"
+        applicationId = "com.llamacpp.llama"
         minSdk = 33
         targetSdk = 34
         versionCode = 1

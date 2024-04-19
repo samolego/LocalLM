@@ -73,7 +73,7 @@ void inputStreamClose(void *ctx) {
 JNIEXPORT jlong
 
 JNICALL
-Java_com_whispercppdemo_whisper_WhisperLib_00024Companion_initContextFromInputStream(
+Java_com_whispercpp_whisper_WhisperLib_00024Companion_initContextFromInputStream(
         JNIEnv *env, jobject thiz, jobject input_stream) {
     UNUSED(thiz);
 
