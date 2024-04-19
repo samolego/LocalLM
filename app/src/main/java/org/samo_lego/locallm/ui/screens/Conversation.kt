@@ -115,7 +115,7 @@ fun Conversation(
                                         ChatMLUtil.toChatML(defaultSystem, text)
                                     }
                                 } else {
-                                    ChatMLUtil.addUserMessage(conversation, text)
+                                    ChatMLUtil.addUserMessage(currentConversation.value, text)
                                 }
 
                                 // Add new text response to view
