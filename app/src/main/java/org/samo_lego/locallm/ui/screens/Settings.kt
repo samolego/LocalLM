@@ -33,10 +33,10 @@ import org.samo_lego.locallm.data.LMProperties
 import org.samo_lego.locallm.data.SettingsKeys
 import org.samo_lego.locallm.data.appSettings
 import org.samo_lego.locallm.lmloader.LMHolder
+import org.samo_lego.locallm.ui.components.dialog.ModelCopyDialog
 import org.samo_lego.locallm.ui.components.settings.Dropdown
 import org.samo_lego.locallm.ui.components.settings.ModelCard
 import org.samo_lego.locallm.ui.components.settings.ModelChooser
-import org.samo_lego.locallm.ui.components.settings.ModelCopyDialog
 import java.io.File
 import java.util.UUID
 

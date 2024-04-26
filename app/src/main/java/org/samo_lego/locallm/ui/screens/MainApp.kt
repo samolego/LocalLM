@@ -51,19 +51,25 @@ import kotlinx.coroutines.withContext
 import org.samo_lego.locallm.data.AvailableModels
 import org.samo_lego.locallm.data.SettingsKeys
 import org.samo_lego.locallm.data.appSettings
+import org.samo_lego.locallm.data.defaultSystem
 import org.samo_lego.locallm.lmloader.LMHolder
 import org.samo_lego.locallm.ui.components.AppDrawer
+import org.samo_lego.locallm.ui.components.dialog.SaveConversationDialog
 import org.samo_lego.locallm.ui.components.message.TextResponse
 import org.samo_lego.locallm.ui.navigation.Routes
 import org.samo_lego.locallm.ui.navigation.navigate
 import org.samo_lego.locallm.util.ChatMLUtil
+import org.samo_lego.locallm.util.deleteConversation
+import org.samo_lego.locallm.util.getAvailableConversations
+import org.samo_lego.locallm.util.loadConversation
+import org.samo_lego.locallm.util.saveConversation
 
 
 const val appTitle = "LocalLM"
 
 @Composable
-fun MainApp() {
-    AppView()
+fun MainApp(filesDir: String) {
+    AppView(filesDir)
 }
 
 val modelLoadedState = mutableStateOf(false)
@@ -72,20 +78,30 @@ val modelAvailableState = mutableStateOf(false)
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
-fun AppView() {
+fun AppView(filesDir: String = "") {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
     val navController = rememberNavController()
     var moreOptionsExpanded by remember { mutableStateOf(false) }
+    var showSaveConversationDialog by remember { mutableStateOf(false) }
 
+    // Information about the model
     val modelLoaded by remember { modelLoadedState }
     val modelAvailable by remember { modelAvailableState }
 
-    val currentConversation = remember { mutableStateOf("") }
+    // The current message being created
+    val currentMessage = remember { mutableStateOf("") }
+
+    // The messages in the conversation
     val messages = remember {
-        val context = TextResponse.fromText(currentConversation.value, ChatMLUtil.im_start)
-        mutableStateListOf<TextResponse>().apply {
-            for (msg in context) {
+        mutableStateListOf<TextResponse>()
+    }
+
+    // Available conversations
+    val availableConversations = remember {
+        val saved = getAvailableConversations(filesDir)
+        mutableStateListOf<String>().apply {
+            for (msg in saved) {
                 add(msg)
             }
         }
@@ -114,7 +130,37 @@ fun AppView() {
                     .width(300.dp)
                     .background(Color.Transparent),
             ) {
-                AppDrawer(navController, drawerState)
+                AppDrawer(
+                    navController,
+                    drawerState,
+                    onNewConversation = {
+                        // Clear current conversation
+                        messages.clear()
+                        currentMessage.value = ""
+
+                        // Close drawer
+                        coroutineScope.launch {
+                            drawerState.close()
+                        }
+                    },
+                    availableConversations = availableConversations,
+                    onConversationSelect = { title ->
+                        // Load conversation
+                        currentMessage.value = loadConversation(filesDir, title)
+                        val newMessages = loadMessages(currentMessage.value).toList()
+                        messages.clear()
+                        for (msg in newMessages) {
+                            messages.add(msg)
+                        }
+                    },
+                    onDeleteConversation = { title ->
+                        // Delete conversation
+                        deleteConversation(filesDir, title)
+
+                        // Remove from available conversations
+                        availableConversations.remove(title)
+                    }
+                )
             }
         },
         drawerState = drawerState,
@@ -140,7 +186,7 @@ fun AppView() {
                             navigationIcon = {
                                 IconButton(
                                     onClick = {
-                                        scope.launch {
+                                        coroutineScope.launch {
                                             drawerState.open()
                                         }
                                     }
@@ -171,6 +217,7 @@ fun AppView() {
                                         text = {
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.SpaceEvenly,
                                             ) {
                                                 Column(
                                                     horizontalAlignment = Alignment.Start,
@@ -189,12 +236,14 @@ fun AppView() {
                                         },
                                         onClick = {
                                             moreOptionsExpanded = false
+                                            showSaveConversationDialog = true
                                         },
                                     )
                                     DropdownMenuItem(
                                         text = {
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.SpaceBetween,
                                             ) {
                                                 Column(
                                                     horizontalAlignment = Alignment.Start,
@@ -215,7 +264,7 @@ fun AppView() {
                                             moreOptionsExpanded = false
 
                                             messages.clear()
-                                            currentConversation.value = ""
+                                            currentMessage.value = ""
                                         },
                                     )
                                 }
@@ -223,6 +272,37 @@ fun AppView() {
                         )
                     }
                 ) { paddingValues ->
+                    if (showSaveConversationDialog) {
+                        SaveConversationDialog(
+                            onCancel = {
+                                showSaveConversationDialog = false
+                            },
+                            onConfirm = { conversationName ->
+                                showSaveConversationDialog = false
+
+                                coroutineScope.launch {
+                                    // Get current system prompt
+                                    var currentPrompt =
+                                        LMHolder.currentModel()?.properties?.systemPrompt
+                                    if (currentPrompt == null) {
+                                        currentPrompt = defaultSystem
+                                    }
+
+                                    // Convert messages to text
+                                    val conversation = ChatMLUtil.toText(messages, currentPrompt)
+                                    saveConversation(
+                                        filesDir,
+                                        conversationName,
+                                        conversation,
+                                    )
+
+                                    // Add conversation to available conversations
+                                    availableConversations.add(conversationName)
+                                }
+                            }
+                        )
+                    }
+
                     if (modelLoaded) {
                         Column(
                             modifier = Modifier
@@ -233,7 +313,7 @@ fun AppView() {
                         ) {
                             Conversation(
                                 messages = messages,
-                                conversation = currentConversation,
+                                currentMessage = currentMessage,
                             )
                         }
                     } else {
@@ -271,8 +351,6 @@ fun AppView() {
                                         Text(text = "Add model")
                                     }
                                 }
-                                // Todo add a nice button to create model card
-
                             }
                         }
                     }
@@ -280,4 +358,8 @@ fun AppView() {
             }
         }
     }
+}
+
+fun loadMessages(messagesText: String): MutableList<TextResponse> {
+    return TextResponse.fromText(messagesText, ChatMLUtil.im_start)
 }

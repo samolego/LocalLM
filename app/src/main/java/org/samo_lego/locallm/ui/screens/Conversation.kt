@@ -38,7 +38,7 @@ import kotlin.math.max
 
 @Composable
 fun Conversation(
-    conversation: MutableState<String>,
+    currentMessage: MutableState<String>,
     messages: SnapshotStateList<TextResponse>,
 ) {
     val ttScope = rememberCoroutineScope()
@@ -106,7 +106,7 @@ fun Conversation(
                                         ChatMLUtil.toChatML(defaultSystem, text)
                                     }
                                 } else {
-                                    ChatMLUtil.addUserMessage(conversation.value, text)
+                                    ChatMLUtil.addUserMessage(currentMessage.value, text)
                                 }
 
                                 // Add new text response to view
@@ -134,7 +134,7 @@ fun Conversation(
 
                                         return@suggest false
                                     } else {
-                                            conversation.value += suggestion
+                                            currentMessage.value += suggestion
                                             botResponse.appendToken(suggestion)
 
                                         if (botResponse.isComplete()) {
@@ -176,7 +176,7 @@ fun Conversation(
                     onForceStopGeneration = {
                         allowGenerating = false
                         tts.reset()
-                        botResponse.appendToken(" ... [-- Stopped --]")
+                        botResponse.appendToken(" ... ")
                     }
 
                 )

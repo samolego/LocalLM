@@ -19,9 +19,11 @@ class MainActivity : ComponentActivity() {
         TTSEngine.init(this)
         AvailableModels.init(filesDir.absolutePath)
 
+        val filesDir = filesDir.absolutePath
+
         setContent {
             LocalLMTheme {
-                MainApp()
+                MainApp(filesDir = filesDir)
             }
         }
     }

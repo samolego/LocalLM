@@ -11,6 +11,7 @@ interface TextResponse {
 
     @Composable
     fun Render()
+    fun getText(): String
 
     companion object {
         fun fromText(text: String, separator: String): MutableList<TextResponse> {
@@ -21,11 +22,11 @@ interface TextResponse {
             var isUser = true
             for (message in messages) {
                 if (message.isEmpty()) continue
-                if (message.startsWith("user")) {
-                    isUser = true
+                isUser = if (message.startsWith("user")) {
+                    true
                 } else if (message.startsWith("assistant")) {
-                    isUser = false
-                }
+                    false
+                } else continue
                 val cutMessage = message.removePrefix("user").removePrefix("assistant")
 
                 // Remove chatml suffix
@@ -35,6 +36,8 @@ interface TextResponse {
                 } else {
                     cutMessage
                 }
+
+                if (finalMsg.isEmpty()) continue
 
                 responses.add(
                     if (isUser) UserMessage(finalMsg)
@@ -54,6 +57,10 @@ class UserMessage(val message: String) : TextResponse {
     @Composable
     override fun Render() {
         MessageBubble(message = message, isUser = true)
+    }
+
+    override fun getText(): String {
+        return message
     }
 }
 
@@ -96,6 +103,10 @@ class BotMessage : TextResponse {
     override fun Render() {
         val message by remember { tokens }
         MessageBubble(message = message, isUser = false)
+    }
+
+    override fun getText(): String {
+        return tokens.value
     }
 
 }

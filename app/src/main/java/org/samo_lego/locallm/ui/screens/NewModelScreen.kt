@@ -28,8 +28,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import org.samo_lego.locallm.data.LMProperties
+import org.samo_lego.locallm.ui.components.dialog.ModelCopyDialog
 import org.samo_lego.locallm.ui.components.settings.ModelCard
-import org.samo_lego.locallm.ui.components.settings.ModelCopyDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

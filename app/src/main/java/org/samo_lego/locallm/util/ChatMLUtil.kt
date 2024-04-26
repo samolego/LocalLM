@@ -1,6 +1,9 @@
 package org.samo_lego.locallm.util
 
 import org.samo_lego.locallm.data.LMProperties
+import org.samo_lego.locallm.ui.components.message.BotMessage
+import org.samo_lego.locallm.ui.components.message.TextResponse
+import org.samo_lego.locallm.ui.components.message.UserMessage
 
 
 class ChatMLUtil {
@@ -55,6 +58,34 @@ class ChatMLUtil {
             }
 
             return ix != 0
+        }
+
+        fun toText(messages: List<TextResponse>, system: String): String {
+            val text = StringBuilder()
+
+            // Add system prompt
+            text.append(im_start)
+            text.append("system\n")
+            text.append(system)
+            text.append('\n')
+            text.append(im_end)
+            text.append('\n')
+
+            for (message in messages) {
+                text.append(im_start)
+                if (message is UserMessage) {
+                    text.append("user")
+                } else if (message is BotMessage) {
+                    text.append("assistant")
+                }
+                text.append('\n')
+                text.append(message.getText())
+                text.append('\n')
+                text.append(im_end)
+                text.append('\n')
+            }
+
+            return text.toString()
         }
     }
 }
