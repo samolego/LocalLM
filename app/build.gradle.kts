@@ -9,16 +9,16 @@ android {
     namespace = "org.samo_lego.locallm"
     compileSdk = 34
 
-    val libs = file("libs/").absolutePath
-    val jllamaLib = file("$libs/java-llama.cpp")
+    //val libs = file("libs/").absolutePath
+    //val jllamaLib = file("$libs/java-llama.cpp")
 
     // Execute "mvn compile" if folder target/ doesn't exist at ./libs/java-llama.cpp/
-    if (!file("$jllamaLib/target").exists()) {
+    /*if (!file("$jllamaLib/target").exists()) {
         exec {
             commandLine = listOf("mvn", "compile")
             workingDir = file("libs/java-llama.cpp/")
         }
-    }
+    }*/
 
     splits {
         abi {
@@ -99,7 +99,7 @@ android {
 
     externalNativeBuild {
         cmake {
-            path = file("$jllamaLib/CMakeLists.txt")
+            //path = file("$jllamaLib/CMakeLists.txt")
             version = "3.22.1"
         }
     }
@@ -107,17 +107,17 @@ android {
     sourceSets {
         named("main") {
             // Add source directory for java-llama.cpp
-            java.srcDir("$jllamaLib/src/main/java")
+            //java.srcDir("$jllamaLib/src/main/java")
         }
     }
 }
 
 dependencies {
 
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
-    implementation("androidx.activity:activity-compose:1.8.2")
-    implementation(platform("androidx.compose:compose-bom:2023.08.00"))
+    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.1")
+    implementation("androidx.activity:activity-compose:1.9.0")
+    implementation(platform("androidx.compose:compose-bom:2024.05.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
@@ -127,20 +127,20 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2023.08.00"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.05.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     // Icons
-    implementation("androidx.compose.material:material-icons-extended:1.6.5")
+    implementation("androidx.compose.material:material-icons-extended:1.6.7")
 
     // For markdown support
     implementation("com.halilibo.compose-richtext:richtext-commonmark:0.20.0")
     implementation("com.halilibo.compose-richtext:richtext-ui-material3:0.20.0")
 
     // Fix issue with loading indicators crashing app
-    implementation("androidx.compose.animation:animation:1.6.5")
+    implementation("androidx.compose.animation:animation:1.6.7")
 
     // Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")

@@ -149,6 +149,7 @@ fun AppView(filesDir: String = "") {
                     },
                     availableConversations = availableConversations,
                     onConversationSelect = { title ->
+                        currentConversationName = title
                         // Load conversation
                         currentMessage.value = loadConversation(filesDir, title)
                         val newMessages = loadMessages(currentMessage.value).toList()
@@ -389,7 +390,7 @@ fun saveCurrentConversation(
     coroutineScope.launch {
         // Get current system prompt
         var currentPrompt =
-            LMHolder.currentModel()?.properties?.systemPrompt
+            LMHolder.currentModel()?.systemPrompt
         if (currentPrompt == null) {
             currentPrompt = defaultSystem
         }

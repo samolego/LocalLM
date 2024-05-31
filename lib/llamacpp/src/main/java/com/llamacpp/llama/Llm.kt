@@ -3,9 +3,6 @@ package com.llamacpp.llama
 import android.util.Log
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
 import kotlin.concurrent.thread
@@ -37,7 +34,7 @@ class Llm {
         }
     }.asCoroutineDispatcher()
 
-    private val nlen: Int = 64
+    private val nlen: Int = 128
 
     private external fun logToAndroid()
     private external fun loadModel(filename: String): Long
@@ -89,7 +86,7 @@ class Llm {
         }
     }
 
-    suspend fun load(pathToModel: String) {
+    suspend fun load(pathToModel: String, onLoaded: () -> Unit) {
         withContext(runLoop) {
             when (threadLocalState.get()) {
                 is State.Idle -> {
@@ -104,25 +101,31 @@ class Llm {
 
                     Log.i(tag, "Loaded model $pathToModel")
                     threadLocalState.set(State.Loaded(model, context, batch))
+                    onLoaded()
                 }
                 else -> throw IllegalStateException("Model already loaded")
             }
         }
     }
 
-    fun send(message: String): Flow<String> = flow {
-        when (val state = threadLocalState.get()) {
-            is State.Loaded -> {
-                val ncur = IntVar(completionInit(state.context, state.batch, message, nlen))
-                while (ncur.value <= nlen) {
-                    val str = completionLoop(state.context, state.batch, nlen, ncur) ?: break
-                    emit(str)
+    suspend fun send(message: String, onMessage: (String) -> Boolean, onEnd: () -> Unit) {
+        withContext(runLoop) {
+            when (val state = threadLocalState.get()) {
+                is State.Loaded -> {
+                    val ncur = IntVar(completionInit(state.context, state.batch, message, nlen))
+                    while (true) {
+                        val str = completionLoop(state.context, state.batch, nlen, ncur) ?: break
+                        if (!onMessage(str)) {
+                            break
+                        }
+                    }
+                    kvCacheClear(state.context)
+                    onEnd()
                 }
-                kvCacheClear(state.context)
+                else -> {}
             }
-            else -> {}
         }
-    }.flowOn(runLoop)
+    }
 
     /**
      * Unloads the model and frees resources.
@@ -135,7 +138,7 @@ class Llm {
                 is State.Loaded -> {
                     freeContext(state.context)
                     freeModel(state.model)
-                    freeBatch(state.batch)
+                    //freeBatch(state.batch)
 
                     threadLocalState.set(State.Idle)
                 }

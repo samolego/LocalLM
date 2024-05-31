@@ -122,7 +122,7 @@ fun Settings(navController: NavHostController?) {
                 )
             }
             LaunchedEffect(Unit) {
-                val props = LMHolder.currentModel()?.properties
+                val props = LMHolder.currentModel()
                 if (props != null) {
                     modelProperties = props
                 }

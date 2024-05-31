@@ -102,7 +102,7 @@ fun Conversation(
                                 val context = if (messages.isEmpty()) {
                                     val current = LMHolder.currentModel()
                                     if (current != null) {
-                                        ChatMLUtil.toChatML(current.properties.systemPrompt, text)
+                                        ChatMLUtil.toChatML(current.systemPrompt, text)
                                     } else {
                                         ChatMLUtil.toChatML(defaultSystem, text)
                                     }
@@ -121,7 +121,8 @@ fun Conversation(
                                 tts.reset()
                                 allowGenerating = true
                                 LMHolder.suggest(
-                                    context, onSuggestion = { suggestion ->
+                                    context,
+                                    onSuggestion = { suggestion ->
                                         if (!allowGenerating) {
                                             return@suggest false
                                         }
@@ -170,6 +171,11 @@ fun Conversation(
                                         return@suggest true
                                     },
                                     onEnd = {
+                                        if (messages.last().getText().isEmpty()) {
+                                            // Remove empty response
+                                            messages.remove(botResponse)
+                                        }
+
                                         onEndSuggestions(
                                             botResponse,
                                             ttScope,

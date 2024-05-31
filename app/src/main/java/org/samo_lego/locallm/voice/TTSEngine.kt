@@ -114,7 +114,9 @@ class TTSEngine(context: Context) {
         // Clear current sentence
         currentSentence.clear()
         holdedTokens.clear()
-        tts.stop()
+        if (tts.isSpeaking) {
+            tts.stop()
+        }
     }
 
     fun finishSentence(ttScope: CoroutineScope) {
