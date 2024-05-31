@@ -149,7 +149,6 @@ fun AppView(filesDir: String = "") {
                     },
                     availableConversations = availableConversations,
                     onConversationSelect = { title ->
-                        currentConversationName = title
                         // Load conversation
                         currentMessage.value = loadConversation(filesDir, title)
                         val newMessages = loadMessages(currentMessage.value).toList()
@@ -157,6 +156,7 @@ fun AppView(filesDir: String = "") {
                         for (msg in newMessages) {
                             messages.add(msg)
                         }
+                        currentConversationName = title
                     },
                     onDeleteConversation = { title ->
                         // Delete conversation
@@ -250,7 +250,6 @@ fun AppView(filesDir: String = "") {
                                                     currentConversationName,
                                                     messages,
                                                     filesDir,
-                                                    availableConversations,
                                                 )
                                             }
                                         },
@@ -302,8 +301,10 @@ fun AppView(filesDir: String = "") {
                                     currentConversationName,
                                     messages,
                                     filesDir,
-                                    availableConversations,
                                 )
+
+                                // Add conversation to available conversations
+                                availableConversations.add(currentConversationName)
                             }
                         )
                     }
@@ -326,7 +327,6 @@ fun AppView(filesDir: String = "") {
                                             currentConversationName,
                                             messages,
                                             filesDir,
-                                            availableConversations,
                                         )
                                     }
                                 }
@@ -385,25 +385,23 @@ fun saveCurrentConversation(
     conversationName: String,
     messages: List<TextResponse>,
     filesDir: String,
-    availableConversations: MutableList<String>,
 ) {
-    coroutineScope.launch {
-        // Get current system prompt
-        var currentPrompt =
-            LMHolder.currentModel()?.systemPrompt
-        if (currentPrompt == null) {
-            currentPrompt = defaultSystem
+    if (conversationName.isNotEmpty()) {
+        coroutineScope.launch {
+            // Get current system prompt
+            var currentPrompt =
+                LMHolder.currentModel()?.systemPrompt
+            if (currentPrompt == null) {
+                currentPrompt = defaultSystem
+            }
+
+            // Convert messages to text
+            val conversation = ChatMLUtil.toText(messages, currentPrompt)
+            saveConversation(
+                filesDir,
+                conversationName,
+                conversation,
+            )
         }
-
-        // Convert messages to text
-        val conversation = ChatMLUtil.toText(messages, currentPrompt)
-        saveConversation(
-            filesDir,
-            conversationName,
-            conversation,
-        )
-
-        // Add conversation to available conversations
-        availableConversations.add(conversationName)
     }
 }

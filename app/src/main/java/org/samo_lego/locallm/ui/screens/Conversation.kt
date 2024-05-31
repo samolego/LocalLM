@@ -128,6 +128,7 @@ fun Conversation(
                                         }
                                         Log.v("LocalLM", "Suggestion: $suggestion")
                                         if (suggestion.isEmpty()) {
+                                            currentMessage.value += ChatMLUtil.im_end
                                             onEndSuggestions(
                                                 botResponse,
                                                 ttScope,
