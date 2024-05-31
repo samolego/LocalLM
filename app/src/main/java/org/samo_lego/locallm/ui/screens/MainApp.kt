@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.samo_lego.locallm.data.AvailableModels
@@ -97,6 +98,8 @@ fun AppView(filesDir: String = "") {
         mutableStateListOf<TextResponse>()
     }
 
+    var currentConversationName by remember { mutableStateOf("") }
+
     // Available conversations
     val availableConversations = remember {
         val saved = getAvailableConversations(filesDir)
@@ -137,6 +140,7 @@ fun AppView(filesDir: String = "") {
                         // Clear current conversation
                         messages.clear()
                         currentMessage.value = ""
+                        currentConversationName = ""
 
                         // Close drawer
                         coroutineScope.launch {
@@ -236,7 +240,18 @@ fun AppView(filesDir: String = "") {
                                         },
                                         onClick = {
                                             moreOptionsExpanded = false
-                                            showSaveConversationDialog = true
+                                            showSaveConversationDialog =
+                                                currentConversationName.isEmpty()
+
+                                            if (!showSaveConversationDialog) {
+                                                saveCurrentConversation(
+                                                    coroutineScope,
+                                                    currentConversationName,
+                                                    messages,
+                                                    filesDir,
+                                                    availableConversations,
+                                                )
+                                            }
                                         },
                                     )
                                     DropdownMenuItem(
@@ -278,27 +293,16 @@ fun AppView(filesDir: String = "") {
                                 showSaveConversationDialog = false
                             },
                             onConfirm = { conversationName ->
+                                currentConversationName = conversationName
                                 showSaveConversationDialog = false
 
-                                coroutineScope.launch {
-                                    // Get current system prompt
-                                    var currentPrompt =
-                                        LMHolder.currentModel()?.properties?.systemPrompt
-                                    if (currentPrompt == null) {
-                                        currentPrompt = defaultSystem
-                                    }
-
-                                    // Convert messages to text
-                                    val conversation = ChatMLUtil.toText(messages, currentPrompt)
-                                    saveConversation(
-                                        filesDir,
-                                        conversationName,
-                                        conversation,
-                                    )
-
-                                    // Add conversation to available conversations
-                                    availableConversations.add(conversationName)
-                                }
+                                saveCurrentConversation(
+                                    coroutineScope,
+                                    currentConversationName,
+                                    messages,
+                                    filesDir,
+                                    availableConversations,
+                                )
                             }
                         )
                     }
@@ -314,6 +318,17 @@ fun AppView(filesDir: String = "") {
                             Conversation(
                                 messages = messages,
                                 currentMessage = currentMessage,
+                                onMessageGenerated = {
+                                    if (currentConversationName.isNotEmpty()) {
+                                        saveCurrentConversation(
+                                            coroutineScope,
+                                            currentConversationName,
+                                            messages,
+                                            filesDir,
+                                            availableConversations,
+                                        )
+                                    }
+                                }
                             )
                         }
                     } else {
@@ -362,4 +377,32 @@ fun AppView(filesDir: String = "") {
 
 fun loadMessages(messagesText: String): MutableList<TextResponse> {
     return TextResponse.fromText(messagesText, ChatMLUtil.im_start)
+}
+
+fun saveCurrentConversation(
+    coroutineScope: CoroutineScope,
+    conversationName: String,
+    messages: List<TextResponse>,
+    filesDir: String,
+    availableConversations: MutableList<String>,
+) {
+    coroutineScope.launch {
+        // Get current system prompt
+        var currentPrompt =
+            LMHolder.currentModel()?.properties?.systemPrompt
+        if (currentPrompt == null) {
+            currentPrompt = defaultSystem
+        }
+
+        // Convert messages to text
+        val conversation = ChatMLUtil.toText(messages, currentPrompt)
+        saveConversation(
+            filesDir,
+            conversationName,
+            conversation,
+        )
+
+        // Add conversation to available conversations
+        availableConversations.add(conversationName)
+    }
 }

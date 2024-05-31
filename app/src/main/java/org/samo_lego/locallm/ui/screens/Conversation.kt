@@ -40,6 +40,7 @@ import kotlin.math.max
 fun Conversation(
     currentMessage: MutableState<String>,
     messages: SnapshotStateList<TextResponse>,
+    onMessageGenerated: () -> Unit,
 ) {
     val ttScope = rememberCoroutineScope()
     val contextScope = rememberCoroutineScope()
@@ -128,46 +129,52 @@ fun Conversation(
                                         if (suggestion.isEmpty()) {
                                             onEndSuggestions(
                                                 botResponse,
-                                                ttScope
+                                                ttScope,
+                                                onMessageGenerated,
                                             )
                                             allowGenerating = false
 
-                                        return@suggest false
-                                    } else {
+                                            return@suggest false
+                                        } else {
                                             currentMessage.value += suggestion
                                             botResponse.appendToken(suggestion)
 
-                                        if (botResponse.isComplete()) {
-                                            onEndSuggestions(
-                                                botResponse,
-                                                ttScope
-                                            )
-                                            allowGenerating = false
-                                            return@suggest false
+                                            if (botResponse.isComplete()) {
+                                                onEndSuggestions(
+                                                    botResponse,
+                                                    ttScope,
+                                                    onMessageGenerated,
+                                                )
+                                                allowGenerating = false
+                                                return@suggest false
+                                            }
+
+                                            backticks += suggestion.count { it == '`' }
+
+                                            if (botResponse.tokens.value.endsWith("\n\n") && backticks % 2 == 0) {
+                                                // New bot message bubble
+                                                botResponse = BotMessage()
+                                                messages.add(botResponse)
+                                            }
+
+                                            if (appSettings.getBool(SettingsKeys.USE_TTS, true)) {
+                                                tts.addWord(ttScope, suggestion)
+                                            }
+
+                                            // Scroll to bottom
+                                            ttScope.launch {
+                                                scrollState.animateScrollToItem(messages.size - 1)
+                                            }
                                         }
 
-                                        backticks += suggestion.count { it == '`' }
-
-                                        if (botResponse.tokens.value.endsWith("\n\n") && backticks % 2 == 0) {
-                                            // New bot message bubble
-                                            botResponse = BotMessage()
-                                            messages.add(botResponse)
-                                        }
-
-                                        if (appSettings.getBool(SettingsKeys.USE_TTS, true)) {
-                                            tts.addWord(ttScope, suggestion)
-                                        }
-
-                                        // Scroll to bottom
-                                        ttScope.launch {
-                                            scrollState.animateScrollToItem(messages.size - 1)
-                                        }
-                                    }
-
-                                    return@suggest true
-                                },
+                                        return@suggest true
+                                    },
                                     onEnd = {
-                                        onEndSuggestions(botResponse, ttScope)
+                                        onEndSuggestions(
+                                            botResponse,
+                                            ttScope,
+                                            onMessageGenerated,
+                                        )
                                         allowGenerating = false
                                     })
                             }
@@ -185,9 +192,14 @@ fun Conversation(
     }
 }
 
-private fun onEndSuggestions(botResponse: BotMessage, ttScope: CoroutineScope) {
+private fun onEndSuggestions(
+    botResponse: BotMessage,
+    ttScope: CoroutineScope,
+    onMsgGenerated: () -> Unit,
+) {
     // Ended stream
     botResponse.complete()
     // Finish the sentence
     tts.finishSentence(ttScope)
+    onMsgGenerated()
 }
