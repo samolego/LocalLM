@@ -19,7 +19,7 @@ interface TextResponse {
             // Cut out system prompt (till first user message)
             val conversation = text.substringAfter(ChatMLUtil.im_end)
             val messages = conversation.split(separator)
-            var isUser = true
+            var isUser: Boolean
             for (message in messages) {
                 if (message.isEmpty()) continue
                 isUser = if (message.startsWith("user")) {
