@@ -94,9 +94,7 @@ fun AppView(filesDir: String = "") {
     val currentMessage = remember { mutableStateOf("") }
 
     // The messages in the conversation
-    val messages = remember {
-        mutableStateListOf<TextResponse>()
-    }
+    val messages = remember { mutableStateListOf<TextResponse>() }
 
     var currentConversationName by remember { mutableStateOf("") }
 
