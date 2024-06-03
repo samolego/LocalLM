@@ -62,6 +62,10 @@ class UserMessage(val message: String) : TextResponse {
     override fun getText(): String {
         return message
     }
+
+    override fun toString(): String {
+        return getText()
+    }
 }
 
 class BotMessage : TextResponse {
@@ -96,6 +100,10 @@ class BotMessage : TextResponse {
             )
         }
         savedTokens = ""
+    }
+
+    override fun toString(): String {
+        return getText()
     }
 
     @Preview
