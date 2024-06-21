@@ -44,7 +44,7 @@ fun MessageBubble(message: String, isUser: Boolean) {
                     ),
                 )
 
-                .background(if (isUser) Color.LightGray else Color.DarkGray),
+                .background(if (isUser) Color.Gray else Color.DarkGray),
         ) {
             if (message.isEmpty()) {
                 Box(modifier = Modifier.padding(8.dp)) {

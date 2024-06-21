@@ -53,7 +53,7 @@ interface TextResponse {
     }
 }
 
-class UserMessage(val message: String) : TextResponse {
+class UserMessage(private val message: String) : TextResponse {
     @Composable
     override fun Render() {
         MessageBubble(message = message, isUser = true)
